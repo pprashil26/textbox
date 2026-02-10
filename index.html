@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Minimal Text App</title>
 
-<!-- Screenshot library -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
@@ -45,7 +44,6 @@
     border: none;
     border-radius: 8px;
     background: #e0e0e0;
-    cursor: pointer;
   }
 
   .toolbar button.active {
@@ -66,6 +64,7 @@
     border: none;
     outline: none;
     resize: none;
+    background: transparent;
   }
 
   #editor.bold {
@@ -98,6 +97,23 @@
   const shotBtn = document.getElementById('shotBtn');
   const toolbar = document.getElementById('toolbar');
 
+  function takeScreenshot() {
+    toolbar.classList.add('hidden');
+
+    requestAnimationFrame(async () => {
+      const canvas = await html2canvas(editor, {
+        backgroundColor: null
+      });
+
+      const link = document.createElement('a');
+      link.download = 'text.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      toolbar.classList.remove('hidden');
+    });
+  }
+
   boldBtn.onclick = () => {
     editor.classList.toggle('bold');
     boldBtn.classList.toggle('active');
@@ -108,20 +124,23 @@
     capsBtn.classList.toggle('active');
   };
 
-  shotBtn.onclick = async () => {
-    toolbar.classList.add('hidden');
+  shotBtn.onclick = takeScreenshot;
 
-    // give browser one frame to hide toolbar
-    await new Promise(r => requestAnimationFrame(r));
+  // ✌️ 2-finger tap gesture
+  let twoFingerTap = false;
 
-    const canvas = await html2canvas(document.getElementById('app'));
-    const link = document.createElement('a');
-    link.download = 'screenshot.png';
-    link.href = canvas.toDataURL();
-    link.click();
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      twoFingerTap = true;
+    }
+  });
 
-    toolbar.classList.remove('hidden');
-  };
+  document.addEventListener('touchend', () => {
+    if (twoFingerTap) {
+      takeScreenshot();
+      twoFingerTap = false;
+    }
+  });
 </script>
 
 </body>
