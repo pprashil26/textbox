@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
-<meta name="theme-color" content="#fff9c4">
+<meta name="theme-color" content="#3b2f2f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
@@ -21,7 +21,7 @@
   body {
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #ffffff;
+    background: #3b2f2f;
     color: #000;
     display: flex;
     flex-direction: column;
@@ -75,14 +75,19 @@
   .templates h3 {
     font-size: 14px;
     font-weight: 600;
-    color: #555;
+    color: #ddd;
     margin-bottom: 6px;
   }
 
-  .templates button {
-    width: 100%;
-    padding: 10px;
+  .template-item {
+    display: flex;
+    gap: 6px;
     margin-bottom: 8px;
+  }
+
+  .template-item button.template-text {
+    flex: 1;
+    padding: 10px;
     border: none;
     border-radius: 10px;
     background: #eef2ff;
@@ -90,7 +95,22 @@
     text-align: left;
   }
 
+  .template-item button.delete {
+    width: 36px;
+    border: none;
+    border-radius: 10px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
   .templates .add {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 10px;
     background: #22c55e;
     color: #fff;
     font-weight: 600;
@@ -132,11 +152,27 @@
 
   function renderTemplates() {
     templateList.innerHTML = '';
-    templates.forEach(text => {
-      const btn = document.createElement('button');
-      btn.textContent = text;
-      btn.onclick = () => editor.value = text;
-      templateList.appendChild(btn);
+    templates.forEach((text, index) => {
+      const row = document.createElement('div');
+      row.className = 'template-item';
+
+      const textBtn = document.createElement('button');
+      textBtn.className = 'template-text';
+      textBtn.textContent = text;
+      textBtn.onclick = () => editor.value = text;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete';
+      delBtn.textContent = '×';
+      delBtn.onclick = () => {
+        templates.splice(index, 1);
+        localStorage.setItem('templates', JSON.stringify(templates));
+        renderTemplates();
+      };
+
+      row.appendChild(textBtn);
+      row.appendChild(delBtn);
+      templateList.appendChild(row);
     });
   }
   renderTemplates();
