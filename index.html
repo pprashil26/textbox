@@ -123,8 +123,8 @@
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
   <button id="capsBtn">CAPS</button>
-  <button id="copyBtn">Copy</button>
-  <button id="clearBtn">Clear</button>
+  <button id="copyBtn">📋 Copy</button>
+  <button id="clearBtn">🗑 Clear</button>
   <button id="shotBtn">📸</button>
 </div>
 
@@ -197,8 +197,8 @@
 
   copyBtn.onclick = async () => {
     await navigator.clipboard.writeText(editor.value);
-    copyBtn.textContent = 'Copied';
-    setTimeout(() => copyBtn.textContent = 'Copy', 800);
+    copyBtn.textContent = '✓ Copied';
+    setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
   };
 
   clearBtn.onclick = () => {
