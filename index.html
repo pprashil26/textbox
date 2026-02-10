@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimal Text App</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fff;
+    color: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+    z-index: 10;
+  }
+
+  /* button styles */
+  .toolbar button {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(145deg, #f3f3f3, #e0e0e0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .toolbar button:hover {
+    background: linear-gradient(145deg, #e0eaff, #d0e1ff);
+  }
+
+  .toolbar button.active {
+    background: linear-gradient(145deg, #4a90e2, #3573c6);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  #editor {
+    width: 90%;
+    max-width: 450px;
+    height: 30vh;
+    padding: 16px;
+    font-size: 20px;
+    line-height: 1.4;
+    border-radius: 14px;
+    border: none;
+    outline: none;
+    resize: none;
+    background: #fff9c4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  #editor.bold { font-weight: bold; }
+  #editor.caps { text-transform: uppercase; }
+
+  /* Templates dropdown */
+  #templatesList {
+    position: absolute;
+    top: 60px;
+    display: none;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    width: 200px;
+    z-index: 100;
+    padding: 6px 0;
+  }
+
+  #templatesList button {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+
+  #templatesList button:hover {
+    background: #f0f0f0;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="toolbar">
+  <button id="boldBtn">B</button>
+  <button id="capsBtn">CAPS</button>
+  <button id="copyBtn">Copy</button>
+  <button id="shotBtn">📸</button>
+  <button id="templatesBtn">T</button>
+</div>
+
+<div id="templatesList"></div>
+
+<textarea id="editor" maxlength="160" placeholder="Type short message… (160 chars max)"></textarea>
+
+<script>
+  const editor = document.getElementById('editor');
+  const boldBtn = document.getElementById('boldBtn');
+  const capsBtn = document.getElementById('capsBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const shotBtn = document.getElementById('shotBtn');
+  const templatesBtn = document.getElementById('templatesBtn');
+  const templatesList = document.getElementById('templatesList');
+  const toolbar = document.getElementById('toolbar');
+
+  // --- Templates logic ---
+  let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+
+  // Function to render templates dropdown
+  function renderTemplates() {
+    templatesList.innerHTML = '';
+    templates.forEach((t, i) => {
+      const btn = document.createElement('button');
+      btn.textContent = t;
+      btn.onclick = () => {
+        editor.value = t;
+        templatesList.style.display = 'none';
+      };
+      templatesList.appendChild(btn);
+    });
+    // If no templates, show placeholder
+    if(templates.length === 0){
+      const btn = document.createElement('button');
+      btn.textContent = 'No templates saved';
+      btn.disabled = true;
+      templatesList.appendChild(btn);
+    }
+  }
+
+  renderTemplates();
+
+  templatesBtn.onclick = () => {
+    templatesList.style.display = templatesList.style.display === 'flex' ? 'none' : 'flex';
+    // position dropdown below toolbar button
+    const rect = templatesBtn.getBoundingClientRect();
+    templatesList.style.left = `${rect.left}px`;
+  };
+
+  // Optional: hide dropdown if click outside
+  document.addEventListener('click', e => {
+    if(!templatesBtn.contains(e.target) && !templatesList.contains(e.target)){
+      templatesList.style.display = 'none';
+    }
+  });
+
+  // --- Screenshot logic ---
+  async function takeScreenshot() {
+    toolbar.style.display = 'none';
+    requestAnimationFrame(async () => {
+      const canvas = await html2canvas(editor, { backgroundColor: null });
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'text.png', { type: 'image/png' });
+        if(navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file] }); }
+          catch(e){ console.error(e); }
+        } else {
+          const link = document.createElement('a');
+          link.download = 'text.png';
+          link.href = URL.createObjectURL(file);
+          link.click();
+        }
+        toolbar.style.display = 'flex';
+      });
+    });
+  }
+
+  // --- Button events ---
+  boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
+  capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(editor.value);
+      copyBtn.textContent = 'Copied';
+      setTimeout(() => copyBtn.textContent = 'Copy', 1000);
+    } catch { alert('Copy failed'); }
+  };
+  shotBtn.onclick = takeScreenshot;
+
+  // --- 2-finger tap screenshot ---
+  let twoFingerTap = false;
+  document.addEventListener('touchstart', e => { if(e.touches.length === 2) twoFingerTap = true; });
+  document.addEventListener('touchend', () => { if(twoFingerTap) { takeScreenshot(); twoFingerTap = false; } });
+
+</script>
+
+</body>
+</html>
