@@ -31,14 +31,13 @@ body {
 #editor {
   width: 92%;
   max-width: 480px;
-  min-height: 120px;
+  height: 32vh;
   padding: 18px;
   font-size: 22px;
   line-height: 1.5;
   border: none;
   outline: none;
   resize: none;
-  overflow: hidden;
   background: #bbf7d0;
   border-radius: 14px;
   margin-top: 14px;
@@ -140,8 +139,7 @@ body {
 
 .pin.active {
   background: #ffffff;
-  color: #000;
-  border-radius: 50%;
+  color: #4a3838;
 }
 
 .templates .add {
@@ -193,13 +191,6 @@ const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
-function autoGrow() {
-  editor.style.height = 'auto';
-  editor.style.height = editor.scrollHeight + 'px';
-}
-editor.addEventListener('input', autoGrow);
-window.addEventListener('load', autoGrow);
-
 function renderTemplates() {
   templateList.innerHTML = '';
   if (!templatesVisible) return;
@@ -215,10 +206,7 @@ function renderTemplates() {
     const textBtn = document.createElement('button');
     textBtn.className = 'template-text';
     textBtn.textContent = t.text;
-    textBtn.onclick = () => {
-      editor.value = t.text;
-      autoGrow();
-    };
+    textBtn.onclick = () => editor.value = t.text;
 
     const pinBtn = document.createElement('button');
     pinBtn.className = 'pin';
@@ -262,7 +250,6 @@ addTemplateBtn.onclick = () => {
   localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
   editor.value = '';
-  autoGrow();
 };
 
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
@@ -274,7 +261,7 @@ copyBtn.onclick = async () => {
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
 
-clearBtn.onclick = () => { editor.value = ''; autoGrow(); };
+clearBtn.onclick = () => { editor.value = ''; };
 
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
@@ -289,7 +276,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.color = '#3b2f2f'; /* ✅ FIXED: Dark brown text */
+  tempDiv.style.color = '#3b2f2f';
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
@@ -299,10 +286,13 @@ async function takeScreenshot() {
   tempDiv.appendChild(pre);
 
   document.body.appendChild(tempDiv);
-  const canvas = await html2canvas(tempDiv, { backgroundColor: null });
 
-  canvas.toBlob(async blob => {
+  try {
+    const canvas = await html2canvas(tempDiv, { backgroundColor: null });
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     const file = new File([blob], 'text.png', { type: 'image/png' });
+
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file] });
     } else {
@@ -311,9 +301,10 @@ async function takeScreenshot() {
       link.href = URL.createObjectURL(file);
       link.click();
     }
-    toolbar.style.display = 'flex';
+  } finally {
+    toolbar.style.display = 'flex';   // ✅ ensure toolbar always visible
     document.body.removeChild(tempDiv);
-  });
+  }
 }
 
 shotBtn.onclick = takeScreenshot;
