@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Minimal Text</title>
 
 <link rel="manifest" href="manifest.json">
@@ -15,8 +16,6 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
-
 * { box-sizing: border-box; }
 
 body {
@@ -32,7 +31,7 @@ body {
 #editor {
   width: 92%;
   max-width: 480px;
-  min-height: 80px;
+  min-height: 32vh;
   padding: 18px;
   font-size: 22px;
   line-height: 1.5;
@@ -44,6 +43,7 @@ body {
   margin-top: 14px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   overflow: hidden;
+  font-family: inherit;
 }
 
 #editor:focus {
@@ -53,6 +53,16 @@ body {
 
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
+
+#charCount {
+  width: 92%;
+  max-width: 480px;
+  text-align: right;
+  font-size: 12px;
+  color: #ddd;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
 
 .toolbar {
   width: 92%;
@@ -75,22 +85,24 @@ body {
 
 .toolbar button.active { background: #2563eb; }
 
-.templates-toggle {
+.templates-controls {
   width: 92%;
   max-width: 480px;
   display: flex;
   gap: 6px;
   margin: 10px 0 4px;
+  flex-wrap: wrap;
 }
 
-.templates-toggle button {
+.templates-controls button {
   flex: 1;
   border: none;
   border-radius: 10px;
-  padding: 8px;
+  padding: 6px 10px;
   font-size: 13px;
   background: #4a3838;
   color: #fff;
+  font-weight: 600;
 }
 
 .templates {
@@ -103,23 +115,6 @@ body {
   font-weight: 600;
   color: #ddd;
   margin-bottom: 6px;
-}
-
-.templates-row {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.templates-row button {
-  flex: 1;
-  border-radius: 10px;
-  border: none;
-  background: #4a3838;
-  color: #fff;
-  padding: 8px;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .template-item {
@@ -146,7 +141,7 @@ body {
   height: 36px;
   min-width: 36px;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   background: #4a3838;
   color: #fff;
   font-size: 16px;
@@ -158,41 +153,26 @@ body {
 }
 
 .pin.active {
-  background: #fff;
+  background: #fff; 
   color: #4a3838;
 }
 
-.backup-section {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.backup-section button {
-  width: 100%;
-  padding: 8px;
-  border-radius: 10px;
+.templates .add {
+  flex: 1;
+  padding: 10px;
   border: none;
+  border-radius: 10px;
   background: #4a3838;
   color: #fff;
-  font-size: 13px;
   font-weight: 600;
-}
-
-#charCount {
-  width: 92%;
-  max-width: 480px;
-  text-align: right;
-  font-size: 12px;
-  color: #ddd;
-  margin-bottom: 6px;
+  text-align: center;
 }
 </style>
 </head>
 <body>
 
 <textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
-<div id="charCount">160 characters left</div>
+<div id="charCount">160</div>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -202,19 +182,20 @@ body {
   <button id="shotBtn">📸</button>
 </div>
 
+<div class="templates-controls">
+  <button id="addTemplateBtn">+ Save as template</button>
+  <button id="toggleTemplatesBtn">Hide Templates</button>
+  <button id="backupBtn">Backup</button>
+</div>
+
+<div id="backupSection" style="display:none; width:92%; max-width:480px; margin-bottom:10px; gap:6px; flex-wrap:wrap; display:flex;">
+  <button id="exportTemplatesBtn">Export Templates</button>
+  <button id="importTemplatesBtn">Import Templates</button>
+  <input type="file" id="importFile" style="display:none;">
+</div>
+
 <div class="templates" id="templatesSection">
   <h3>Templates</h3>
-
-  <div class="templates-row">
-    <button id="addTemplateBtn">+ Save current text as template</button>
-    <button id="toggleTemplatesBtn">Hide Templates</button>
-    <div class="backup-section">
-      <button id="backupBtn">Backup</button>
-      <button id="exportBtn">Export Templates</button>
-      <button id="importBtn">Import Templates</button>
-    </div>
-  </div>
-
   <div id="templateList"></div>
 </div>
 
@@ -229,11 +210,12 @@ const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
 const backupBtn = document.getElementById('backupBtn');
-const exportBtn = document.getElementById('exportBtn');
-const importBtn = document.getElementById('importBtn');
-const templateList = document.getElementById('templateList');
-const charCount = document.getElementById('charCount');
+const backupSection = document.getElementById('backupSection');
+const exportTemplatesBtn = document.getElementById('exportTemplatesBtn');
+const importTemplatesBtn = document.getElementById('importTemplatesBtn');
+const importFile = document.getElementById('importFile');
 
+const templateList = document.getElementById('templateList');
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
@@ -282,6 +264,7 @@ function renderTemplates() {
 
 renderTemplates();
 
+// Toggle templates
 toggleTemplatesBtn.onclick = () => {
   templatesVisible = !templatesVisible;
   localStorage.setItem('templatesVisible', JSON.stringify(templatesVisible));
@@ -289,6 +272,7 @@ toggleTemplatesBtn.onclick = () => {
   renderTemplates();
 };
 
+// Add template
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
   templates.unshift({ text: editor.value.trim(), pinned: false });
@@ -298,59 +282,62 @@ addTemplateBtn.onclick = () => {
   updateCharCount();
 };
 
+// Backup toggle
+backupBtn.onclick = () => {
+  backupSection.style.display = backupSection.style.display==='flex'?'none':'flex';
+};
+
+// Export templates
+exportTemplatesBtn.onclick = () => {
+  const data = templates.map(t => t.text).join('\n---\n');
+  const blob = new Blob([data], {type:'text/plain'});
+  const link = document.createElement('a');
+  link.download = 'templates.txt';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+};
+
+// Import templates
+importTemplatesBtn.onclick = () => importFile.click();
+importFile.onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const imported = ev.target.result.split('\n---\n').map(text => ({text, pinned:false}));
+    templates = [...imported, ...templates];
+    localStorage.setItem('templates', JSON.stringify(templates));
+    renderTemplates();
+    importFile.value = '';
+  };
+  reader.readAsText(file);
+};
+
+// Bold, Caps, Copy, Clear
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
 capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
-
 copyBtn.onclick = async () => {
   await navigator.clipboard.writeText(editor.value);
   copyBtn.textContent = '✓ Copied';
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
-
 clearBtn.onclick = () => { editor.value = ''; updateCharCount(); };
 
+// Character countdown
+const charCount = document.getElementById('charCount');
 function updateCharCount() {
-  charCount.textContent = `${160 - editor.value.length} characters left`;
+  charCount.textContent = 160 - editor.value.length;
 }
-editor.addEventListener('input', updateCharCount);
+editor.addEventListener('input', () => { updateCharCount(); autoGrow(); });
 
-backupBtn.onclick = () => {
-  exportBtn.style.display = exportBtn.style.display === 'none' ? 'block' : 'none';
-  importBtn.style.display = importBtn.style.display === 'none' ? 'block' : 'none';
-};
+// Auto-grow
+function autoGrow() {
+  editor.style.height = 'auto';
+  editor.style.height = (editor.scrollHeight) + 'px';
+}
+autoGrow();
 
-exportBtn.onclick = () => {
-  const blob = new Blob([JSON.stringify(templates)], {type:'application/json'});
-  const link = document.createElement('a');
-  link.download = 'templates.txt';
-  link.href = URL.createObjectURL(blob);
-  link.click();
-  exportBtn.style.display = 'none';
-  importBtn.style.display = 'none';
-};
-
-importBtn.onclick = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.txt,.json';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        const imported = JSON.parse(evt.target.result);
-        templates = imported.concat(templates);
-        localStorage.setItem('templates', JSON.stringify(templates));
-        renderTemplates();
-      } catch(err) { alert('Invalid file'); }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-  exportBtn.style.display = 'none';
-  importBtn.style.display = 'none';
-};
-
+// Screenshot
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
   toolbar.style.display = 'none';
@@ -364,13 +351,13 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.fontFamily = "'Patrick Hand', cursive";
-  tempDiv.style.color = '#3b2f2f';
+  tempDiv.style.fontFamily = '"Patrick Hand", cursive';
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
   pre.style.font = 'inherit';
   pre.style.whiteSpace = 'pre-wrap';
+  pre.style.color = '#3b2f2f';
   pre.textContent = editor.value;
   tempDiv.appendChild(pre);
 
@@ -391,13 +378,12 @@ async function takeScreenshot() {
     document.body.removeChild(tempDiv);
   });
 }
-
 shotBtn.onclick = takeScreenshot;
 
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
-
 </script>
+
 </body>
 </html>
