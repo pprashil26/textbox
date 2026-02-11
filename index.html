@@ -18,7 +18,6 @@
 
 <style>
   * { box-sizing: border-box; }
-
   body {
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -70,19 +69,40 @@
     font-weight: 600;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(145deg,#f1f3f5,#e2e5e8);
-    color: #111;
+    background: #4a3838; /* slightly lighter than page background */
+    color: #fff;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     transition: transform 0.1s ease, background 0.2s ease;
   }
 
   .toolbar button.active { background: #2563eb; color: #fff; }
-  .toolbar button:active { transform: scale(0.95); background: linear-gradient(145deg,#d0d3d6,#f1f3f5); }
+  .toolbar button:active { transform: scale(0.95); background: #5b4545; }
+
+  .templates-toggle {
+    width: 92%;
+    max-width: 480px;
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px 0 4px;
+  }
+
+  .templates-toggle button {
+    border: none;
+    border-radius: 10px;
+    padding: 4px 10px;
+    font-size: 12px;
+    background: #4a3838;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+  .templates-toggle button:active { transform: scale(0.95); }
 
   .templates {
     width: 92%;
     max-width: 480px;
-    margin-top: 10px;
+    margin-top: 0;
   }
 
   .templates h3 {
@@ -106,11 +126,26 @@
     background: #eef2ff;
     font-size: 15px;
     text-align: left;
+    white-space: pre-wrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: transform 0.1s ease;
   }
 
   .template-item button.template-text:active { transform: scale(0.97); }
+
+  .template-item button.pin {
+    width: 36px;
+    border: none;
+    border-radius: 10px;
+    background: #facc15;
+    color: #111;
+    font-size: 18px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    cursor: pointer;
+  }
+
+  .template-item button.pin:active { transform: scale(0.95); }
 
   .template-item button.delete {
     width: 36px;
@@ -121,7 +156,7 @@
     font-size: 18px;
     font-weight: 600;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform 0.1s ease;
+    cursor: pointer;
   }
 
   .template-item button.delete:active { transform: scale(0.95); }
@@ -156,7 +191,11 @@
   <button id="shotBtn">📸</button>
 </div>
 
-<div class="templates">
+<div class="templates-toggle">
+  <button id="toggleTemplatesBtn">Hide Templates</button>
+</div>
+
+<div class="templates" id="templatesSection">
   <h3>Templates</h3>
   <button class="add" id="addTemplateBtn">+ Save current text as template</button>
   <div id="templateList"></div>
@@ -169,23 +208,42 @@ const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const shotBtn = document.getElementById('shotBtn');
-const toolbar = document.getElementById('toolbar');
 
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
+const templatesSection = document.getElementById('templatesSection');
+const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
 function renderTemplates() {
   templateList.innerHTML = '';
-  templates.forEach((text, index) => {
+
+  const visibleTemplates = templatesVisible ? templates : [];
+
+  // Pinned templates first
+  const pinned = visibleTemplates.filter(t => t.pinned);
+  const unpinned = visibleTemplates.filter(t => !t.pinned);
+  const allTemplates = [...pinned, ...unpinned];
+
+  allTemplates.forEach((t, index) => {
     const row = document.createElement('div');
     row.className = 'template-item';
 
     const textBtn = document.createElement('button');
     textBtn.className = 'template-text';
-    textBtn.textContent = text;
-    textBtn.onclick = () => editor.value = text;
+    textBtn.textContent = t.text;
+    textBtn.onclick = () => editor.value = t.text;
+
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'pin';
+    pinBtn.textContent = '📌';
+    pinBtn.onclick = () => {
+      t.pinned = !t.pinned;
+      localStorage.setItem('templates', JSON.stringify(templates));
+      renderTemplates();
+    };
 
     const delBtn = document.createElement('button');
     delBtn.className = 'delete';
@@ -197,15 +255,23 @@ function renderTemplates() {
     };
 
     row.appendChild(textBtn);
+    row.appendChild(pinBtn);
     row.appendChild(delBtn);
     templateList.appendChild(row);
   });
 }
 renderTemplates();
 
+toggleTemplatesBtn.onclick = () => {
+  templatesVisible = !templatesVisible;
+  localStorage.setItem('templatesVisible', JSON.stringify(templatesVisible));
+  toggleTemplatesBtn.textContent = templatesVisible ? 'Hide Templates' : 'Show Templates';
+  renderTemplates();
+};
+
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
-  templates.unshift(editor.value.trim());
+  templates.unshift({ text: editor.value.trim(), pinned: false });
   templates = templates.slice(0, 10);
   localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
@@ -224,6 +290,7 @@ copyBtn.onclick = async () => {
 clearBtn.onclick = () => { editor.value = ''; };
 
 async function takeScreenshot() {
+  const toolbar = document.getElementById('toolbar');
   toolbar.style.display = 'none';
 
   const tempDiv = document.createElement('div');
@@ -235,8 +302,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  
-  // Use <pre> to preserve line breaks exactly
+
   const pre = document.createElement('pre');
   pre.style.margin = '0';
   pre.style.font = 'inherit';
