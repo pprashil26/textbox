@@ -43,12 +43,14 @@
     border-radius: 14px;
     margin-top: 14px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: box-shadow 0.2s ease;
   }
 
   /* Focus ring on textbox */
   #editor:focus {
     outline: 2px solid #22c55e;
     outline-offset: 2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   }
 
   #editor.bold { font-weight: bold; }
@@ -58,7 +60,7 @@
     width: 92%;
     max-width: 480px;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     margin: 10px 0 6px;
   }
 
@@ -69,9 +71,10 @@
     font-weight: 600;
     border: none;
     border-radius: 10px;
-    background: #f1f3f5;
+    background: linear-gradient(145deg,#f1f3f5,#e2e5e8);
     color: #111;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.1s ease, background 0.2s ease;
   }
 
   .toolbar button.active {
@@ -79,10 +82,17 @@
     color: #fff;
   }
 
+  .toolbar button:active {
+    transform: scale(0.95);
+    background: linear-gradient(145deg,#d0d3d6,#f1f3f5);
+  }
+
   .templates {
     width: 92%;
     max-width: 480px;
     margin-top: 10px;
+    max-height: 220px; /* scroll if overflow */
+    overflow-y: auto;
   }
 
   .templates h3 {
@@ -107,6 +117,11 @@
     font-size: 15px;
     text-align: left;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease;
+  }
+
+  .template-item button.template-text:active {
+    transform: scale(0.97);
   }
 
   .template-item button.delete {
@@ -118,6 +133,11 @@
     font-size: 18px;
     font-weight: 600;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease;
+  }
+
+  .template-item button.delete:active {
+    transform: scale(0.95);
   }
 
   .templates .add {
@@ -126,17 +146,32 @@
     margin-bottom: 10px;
     border: none;
     border-radius: 10px;
-    background: #bbf7d0;
+    background: #d1fae5; /* lighter mint green */
     color: #065f46;
     font-weight: 600;
     text-align: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease;
   }
+
+  .templates .add:active {
+    transform: scale(0.97);
+  }
+
+  #watermarkToggle {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 4px;
+    gap: 4px;
+  }
+
 </style>
 </head>
 <body>
 
-<textarea id="editor" maxlength="160" placeholder="Type short message…"></textarea>
+<textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -144,6 +179,11 @@
   <button id="copyBtn">📋 Copy</button>
   <button id="clearBtn">🗑 Clear</button>
   <button id="shotBtn">📸</button>
+</div>
+
+<div id="watermarkToggle">
+  <input type="checkbox" id="toggleWatermark" checked>
+  <label for="toggleWatermark">Include watermark in screenshot</label>
 </div>
 
 <div class="templates">
@@ -160,6 +200,7 @@
   const clearBtn = document.getElementById('clearBtn');
   const shotBtn = document.getElementById('shotBtn');
   const toolbar = document.getElementById('toolbar');
+  const watermarkToggle = document.getElementById('toggleWatermark');
 
   const addTemplateBtn = document.getElementById('addTemplateBtn');
   const templateList = document.getElementById('templateList');
@@ -199,7 +240,7 @@
     templates = templates.slice(0, 10);
     localStorage.setItem('templates', JSON.stringify(templates));
     renderTemplates();
-    editor.value = ''; // clear textbox after saving
+    editor.value = ''; // auto-clear after saving
   };
 
   boldBtn.onclick = () => {
@@ -225,15 +266,29 @@
   async function takeScreenshot() {
     toolbar.style.display = 'none';
 
-    const canvas = await html2canvas(editor, { backgroundColor: null });
+    const tempDiv = document.createElement('div');
+    tempDiv.style.width = editor.offsetWidth + 'px';
+    tempDiv.style.padding = '18px';
+    tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
+    tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
+    tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
+    tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
+    tempDiv.style.background = '#bbf7d0';
+    tempDiv.style.borderRadius = '14px';
+    tempDiv.textContent = editor.value;
 
-    // Add watermark text
-    const ctx = canvas.getContext('2d');
-    const text = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
-    ctx.font = "12px sans-serif";
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.textAlign = "center";
-    ctx.fillText(text, canvas.width / 2, canvas.height - 10);
+    document.body.appendChild(tempDiv);
+
+    const canvas = await html2canvas(tempDiv, { backgroundColor: null });
+
+    if (watermarkToggle.checked) {
+      const ctx = canvas.getContext('2d');
+      const text = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
+      ctx.font = "10px sans-serif";
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.textAlign = "center";
+      ctx.fillText(text, canvas.width / 2, canvas.height - 6);
+    }
 
     canvas.toBlob(async blob => {
       const file = new File([blob], 'text.png', { type: 'image/png' });
@@ -246,21 +301,15 @@
         link.click();
       }
       toolbar.style.display = 'flex';
+      document.body.removeChild(tempDiv);
     });
   }
 
   shotBtn.onclick = takeScreenshot;
 
   let twoFinger = false;
-  document.addEventListener('touchstart', e => {
-    if (e.touches.length === 2) twoFinger = true;
-  });
-  document.addEventListener('touchend', () => {
-    if (twoFinger) {
-      takeScreenshot();
-      twoFinger = false;
-    }
-  });
+  document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
+  document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
 </script>
 
 </body>
