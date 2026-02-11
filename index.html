@@ -193,7 +193,6 @@ const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
-/* ✅ AUTO GROW */
 function autoGrow() {
   editor.style.height = 'auto';
   editor.style.height = editor.scrollHeight + 'px';
@@ -290,6 +289,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
+  tempDiv.style.color = '#3b2f2f'; /* ✅ FIXED: Dark brown text */
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
