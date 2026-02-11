@@ -38,11 +38,11 @@ body {
   border: none;
   outline: none;
   resize: none;
-  overflow: hidden;
   background: #bbf7d0;
   border-radius: 14px;
   margin-top: 14px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
 
 #editor:focus {
@@ -53,11 +53,21 @@ body {
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
 
+#charCount {
+  font-size: 12px;
+  color: #ddd;
+  text-align: right;
+  width: 92%;
+  max-width: 480px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
 .toolbar {
   width: 92%;
   max-width: 480px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin: 10px 0 6px;
 }
 
@@ -78,7 +88,8 @@ body {
   width: 92%;
   max-width: 480px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin: 10px 0 4px;
 }
 
@@ -89,6 +100,35 @@ body {
   font-size: 12px;
   background: #4a3838;
   color: #fff;
+  cursor: pointer;
+}
+
+.templates-toggle .backup-menu {
+  position: relative;
+}
+
+.backup-options {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 28px;
+  background: #4a3838;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+.backup-options button {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  background: #4a3838;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
 }
 
 .templates {
@@ -107,7 +147,7 @@ body {
   display: flex;
   gap: 6px;
   margin-bottom: 8px;
-  align-items: flex-start;
+  align-items: flex-start; /* top align */
 }
 
 .template-text {
@@ -139,30 +179,14 @@ body {
 }
 
 .pin.active {
-  background: #4a3838;
-  position: relative;
-}
-
-.pin.active::before {
-  content: "";
-  position: absolute;
-  width: 22px;
-  height: 22px;
   background: #fff;
-  border-radius: 50%;
-  z-index: 0;
+  color: #4a3838;
 }
 
-.pin.active span {
-  position: relative;
-  z-index: 1;
-}
-
-.templates .add,
-.templates .io-btn {
+.templates .add {
   width: 100%;
   padding: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   border: none;
   border-radius: 10px;
   background: #4a3838;
@@ -170,15 +194,12 @@ body {
   font-weight: 600;
   text-align: center;
 }
-
-.hidden-input {
-  display: none;
-}
 </style>
 </head>
 <body>
 
 <textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
+<div id="charCount">160</div>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -190,19 +211,24 @@ body {
 
 <div class="templates-toggle">
   <button id="toggleTemplatesBtn">Hide Templates</button>
+  <div class="backup-menu">
+    <button id="backupBtn">Backup</button>
+    <div class="backup-options" id="backupOptions">
+      <button id="exportBtn">Export Templates</button>
+      <button id="importBtn">Import Templates</button>
+    </div>
+  </div>
 </div>
 
 <div class="templates" id="templatesSection">
   <h3>Templates</h3>
   <button class="add" id="addTemplateBtn">+ Save current text as template</button>
-  <button class="io-btn" id="exportBtn">Export Templates (.txt)</button>
-  <button class="io-btn" id="importBtn">Import Templates (.txt)</button>
-  <input type="file" id="fileInput" class="hidden-input" accept=".txt">
   <div id="templateList"></div>
 </div>
 
 <script>
 const editor = document.getElementById('editor');
+const charCount = document.getElementById('charCount');
 const boldBtn = document.getElementById('boldBtn');
 const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
@@ -211,19 +237,13 @@ const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
+const backupBtn = document.getElementById('backupBtn');
+const backupOptions = document.getElementById('backupOptions');
 const exportBtn = document.getElementById('exportBtn');
 const importBtn = document.getElementById('importBtn');
-const fileInput = document.getElementById('fileInput');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
-
-function autoGrow() {
-  editor.style.height = 'auto';
-  editor.style.height = editor.scrollHeight + 'px';
-}
-editor.addEventListener('input', autoGrow);
-autoGrow();
 
 function renderTemplates() {
   templateList.innerHTML = '';
@@ -240,16 +260,11 @@ function renderTemplates() {
     const textBtn = document.createElement('button');
     textBtn.className = 'template-text';
     textBtn.textContent = t.text;
-    textBtn.onclick = () => {
-      editor.value = t.text;
-      autoGrow();
-    };
+    textBtn.onclick = () => editor.value = t.text;
 
     const pinBtn = document.createElement('button');
     pinBtn.className = 'pin';
-    const span = document.createElement('span');
-    span.textContent = '📌';
-    pinBtn.appendChild(span);
+    pinBtn.textContent = '📌';
     if (t.pinned) pinBtn.classList.add('active');
     pinBtn.onclick = () => {
       t.pinned = !t.pinned;
@@ -282,14 +297,17 @@ toggleTemplatesBtn.onclick = () => {
   renderTemplates();
 };
 
+backupBtn.onclick = () => {
+  backupOptions.style.display = backupOptions.style.display === 'block' ? 'none' : 'block';
+};
+
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
   templates.unshift({ text: editor.value.trim(), pinned: false });
-  templates = templates.slice(0, 10);
   localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
   editor.value = '';
-  autoGrow();
+  charCount.textContent = 160;
 };
 
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
@@ -301,10 +319,11 @@ copyBtn.onclick = async () => {
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
 
-clearBtn.onclick = () => {
-  editor.value = '';
-  autoGrow();
-};
+clearBtn.onclick = () => { editor.value = ''; charCount.textContent = 160; };
+
+editor.addEventListener('input', () => {
+  charCount.textContent = 160 - editor.value.length;
+});
 
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
@@ -319,7 +338,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.color = '#3b2f2f';
+  tempDiv.style.color = '#3b2f2f'; // dark brown text
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
@@ -348,57 +367,44 @@ async function takeScreenshot() {
 
 shotBtn.onclick = takeScreenshot;
 
-/* EXPORT */
-exportBtn.onclick = () => {
-  let output = '';
-  templates.forEach(t => {
-    output += '---TEMPLATE---\n';
-    output += 'PINNED: ' + t.pinned + '\n';
-    output += t.text + '\n';
-    output += '---END---\n';
-  });
-
-  const blob = new Blob([output], { type: 'text/plain' });
-  const link = document.createElement('a');
-  link.download = 'minimal-text-templates.txt';
-  link.href = URL.createObjectURL(blob);
-  link.click();
-};
-
-/* IMPORT */
-importBtn.onclick = () => fileInput.click();
-
-fileInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const content = reader.result;
-    const blocks = content.split('---TEMPLATE---').slice(1);
-    const imported = [];
-
-    blocks.forEach(block => {
-      const pinnedMatch = block.match(/PINNED:\s*(true|false)/);
-      const textMatch = block.split('\n').slice(1).join('\n').replace('---END---','').trim();
-      if (textMatch) {
-        imported.push({
-          text: textMatch,
-          pinned: pinnedMatch ? pinnedMatch[1] === 'true' : false
-        });
-      }
-    });
-
-    templates = imported.slice(0,10);
-    localStorage.setItem('templates', JSON.stringify(templates));
-    renderTemplates();
-  };
-  reader.readAsText(file);
-};
-
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
+
+exportBtn.onclick = () => {
+  const dataStr = JSON.stringify(templates, null, 2);
+  const blob = new Blob([dataStr], {type: "application/json"});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = "templates.json";
+  link.click();
+};
+
+importBtn.onclick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json, .txt';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (Array.isArray(imported)) {
+          templates = imported;
+          localStorage.setItem('templates', JSON.stringify(templates));
+          renderTemplates();
+        } else {
+          alert("Invalid file format");
+        }
+      } catch(err) {
+        alert("Error reading file");
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
 </script>
 
 </body>
