@@ -1,311 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Minimal Text</title>
-
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-512.png">
-<link rel="apple-touch-icon" href="icon-512.png">
-<meta name="theme-color" content="#3b2f2f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Textbox Tool</title>
 
 <style>
-* { box-sizing: border-box; }
-
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #3b2f2f;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    margin: 0;
+    font-family: sans-serif;
+    background: #3b2f2f;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-#editor {
-  width: 92%;
-  max-width: 480px;
-  height: 32vh;
-  padding: 18px;
-  font-size: 22px;
-  line-height: 1.5;
-  border: none;
-  outline: none;
-  resize: none;
-  background: #bbf7d0;
-  border-radius: 14px;
-  margin-top: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+.container {
+    width: 95%;
+    max-width: 600px;
+    margin-top: 20px;
 }
 
-#editor:focus {
-  outline: 2px solid #22c55e;
-  outline-offset: 2px;
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    resize: vertical;
+    background: #bbf7d0;
+    white-space: pre-wrap;
+    outline: none;
 }
 
-#editor.bold { font-weight: bold; }
-#editor.caps { text-transform: uppercase; }
+textarea:focus {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+}
 
 .toolbar {
-  width: 92%;
-  max-width: 480px;
-  display: flex;
-  gap: 10px;
-  margin: 10px 0 6px;
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
 }
 
-.toolbar button {
-  flex: 1;
-  padding: 8px 0;
-  font-size: 14px;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
+button {
+    background: #4a3838;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-.toolbar button.active { background: #2563eb; }
-
-.templates-toggle {
-  width: 92%;
-  max-width: 480px;
-  display: flex;
-  justify-content: flex-end;
-  margin: 10px 0 4px;
+button:hover {
+    opacity: 0.9;
 }
 
-.templates-toggle button {
-  border: none;
-  border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 12px;
-  background: #4a3838;
-  color: #fff;
+.templates-header {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.templates {
-  width: 92%;
-  max-width: 480px;
-}
-
-.templates h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ddd;
-  margin-bottom: 6px;
+.templates-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .template-item {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  align-items: flex-start; /* TOP ALIGN */
+    background: #4a3838;
+    padding: 10px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    position: relative;
 }
 
-.template-text {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-size: 15px;
-  text-align: left;
-  white-space: pre-wrap;
+.template-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 6px;
 }
 
-.pin, .delete {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border: none;
-  border-radius: 8px;
-  background: #4a3838;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2px; /* slight visual adjustment */
+.icon-btn {
+    width: 24px;
+    height: 24px;
+    background: #4a3838;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
 }
 
-.pin.active {
-  background: #5b4545; /* subtle darker when pinned */
+/* PIN ACTIVE STYLE */
+.icon-btn.pinned {
+    background: white;
+    color: #4a3838;
 }
 
-.templates .add {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
+.hidden {
+    display: none;
 }
 </style>
 </head>
+
 <body>
+<div class="container">
 
-<textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
+<textarea id="textbox" placeholder="Type here..."></textarea>
 
-<div class="toolbar" id="toolbar">
-  <button id="boldBtn">B</button>
-  <button id="capsBtn">CAPS</button>
-  <button id="copyBtn">📋 Copy</button>
-  <button id="clearBtn">🗑 Clear</button>
-  <button id="shotBtn">📸</button>
+<div class="toolbar">
+    <button onclick="saveTemplate()">Save current text as template</button>
 </div>
 
-<div class="templates-toggle">
-  <button id="toggleTemplatesBtn">Hide Templates</button>
+<div class="templates-header">
+    <span>Templates</span>
+    <button onclick="toggleTemplates()">Hide</button>
 </div>
 
-<div class="templates" id="templatesSection">
-  <h3>Templates</h3>
-  <button class="add" id="addTemplateBtn">+ Save current text as template</button>
-  <div id="templateList"></div>
+<div id="templates" class="templates-container"></div>
+
 </div>
 
 <script>
-const editor = document.getElementById('editor');
-const boldBtn = document.getElementById('boldBtn');
-const capsBtn = document.getElementById('capsBtn');
-const copyBtn = document.getElementById('copyBtn');
-const clearBtn = document.getElementById('clearBtn');
-const shotBtn = document.getElementById('shotBtn');
-const addTemplateBtn = document.getElementById('addTemplateBtn');
-const templateList = document.getElementById('templateList');
-const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
+let templates = [];
+let templatesVisible = true;
 
-let templates = JSON.parse(localStorage.getItem('templates') || '[]');
-let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
+function saveTemplate() {
+    const text = document.getElementById("textbox").value.trim();
+    if (!text) return;
+
+    templates.push({ text, pinned: false });
+    document.getElementById("textbox").value = "";
+    renderTemplates();
+}
+
+function toggleTemplates() {
+    templatesVisible = !templatesVisible;
+    document.getElementById("templates").classList.toggle("hidden", !templatesVisible);
+    document.querySelector(".templates-header button").innerText = templatesVisible ? "Hide" : "Show";
+}
+
+function togglePin(index) {
+    templates[index].pinned = !templates[index].pinned;
+    renderTemplates();
+}
+
+function deleteTemplate(index) {
+    templates.splice(index, 1);
+    renderTemplates();
+}
 
 function renderTemplates() {
-  templateList.innerHTML = '';
-  if (!templatesVisible) return;
+    const container = document.getElementById("templates");
+    container.innerHTML = "";
 
-  const pinned = templates.filter(t => t.pinned);
-  const unpinned = templates.filter(t => !t.pinned);
-  const allTemplates = [...pinned, ...unpinned];
+    const sorted = [...templates].sort((a, b) => b.pinned - a.pinned);
 
-  allTemplates.forEach((t) => {
-    const row = document.createElement('div');
-    row.className = 'template-item';
+    sorted.forEach((template) => {
+        const originalIndex = templates.indexOf(template);
 
-    const textBtn = document.createElement('button');
-    textBtn.className = 'template-text';
-    textBtn.textContent = t.text;
-    textBtn.onclick = () => editor.value = t.text;
+        const div = document.createElement("div");
+        div.className = "template-item";
+        div.innerText = template.text;
 
-    const pinBtn = document.createElement('button');
-    pinBtn.className = 'pin';
-    pinBtn.textContent = '📌';
-    if (t.pinned) pinBtn.classList.add('active');
-    pinBtn.onclick = () => {
-      t.pinned = !t.pinned;
-      localStorage.setItem('templates', JSON.stringify(templates));
-      renderTemplates();
-    };
+        const actions = document.createElement("div");
+        actions.className = "template-actions";
 
-    const delBtn = document.createElement('button');
-    delBtn.className = 'delete';
-    delBtn.textContent = '×';
-    delBtn.onclick = () => {
-      templates = templates.filter(temp => temp !== t);
-      localStorage.setItem('templates', JSON.stringify(templates));
-      renderTemplates();
-    };
+        const pinBtn = document.createElement("button");
+        pinBtn.className = "icon-btn" + (template.pinned ? " pinned" : "");
+        pinBtn.innerHTML = "📌";
+        pinBtn.onclick = () => togglePin(originalIndex);
 
-    row.appendChild(textBtn);
-    row.appendChild(pinBtn);
-    row.appendChild(delBtn);
-    templateList.appendChild(row);
-  });
+        const delBtn = document.createElement("button");
+        delBtn.className = "icon-btn";
+        delBtn.innerHTML = "✕";
+        delBtn.onclick = () => deleteTemplate(originalIndex);
+
+        actions.appendChild(pinBtn);
+        actions.appendChild(delBtn);
+        div.appendChild(actions);
+        container.appendChild(div);
+    });
 }
-
-renderTemplates();
-
-toggleTemplatesBtn.onclick = () => {
-  templatesVisible = !templatesVisible;
-  localStorage.setItem('templatesVisible', JSON.stringify(templatesVisible));
-  toggleTemplatesBtn.textContent = templatesVisible ? 'Hide Templates' : 'Show Templates';
-  renderTemplates();
-};
-
-addTemplateBtn.onclick = () => {
-  if (!editor.value.trim()) return;
-  templates.unshift({ text: editor.value.trim(), pinned: false });
-  templates = templates.slice(0, 10);
-  localStorage.setItem('templates', JSON.stringify(templates));
-  renderTemplates();
-  editor.value = '';
-};
-
-boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
-capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
-
-copyBtn.onclick = async () => {
-  await navigator.clipboard.writeText(editor.value);
-  copyBtn.textContent = '✓ Copied';
-  setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
-};
-
-clearBtn.onclick = () => { editor.value = ''; };
-
-async function takeScreenshot() {
-  const toolbar = document.getElementById('toolbar');
-  toolbar.style.display = 'none';
-
-  const tempDiv = document.createElement('div');
-  tempDiv.style.width = editor.offsetWidth + 'px';
-  tempDiv.style.padding = '18px';
-  tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
-  tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
-  tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
-  tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
-  tempDiv.style.background = '#bbf7d0';
-  tempDiv.style.borderRadius = '14px';
-
-  const pre = document.createElement('pre');
-  pre.style.margin = '0';
-  pre.style.font = 'inherit';
-  pre.style.whiteSpace = 'pre-wrap';
-  pre.textContent = editor.value;
-  tempDiv.appendChild(pre);
-
-  document.body.appendChild(tempDiv);
-  const canvas = await html2canvas(tempDiv, { backgroundColor: null });
-
-  canvas.toBlob(async blob => {
-    const file = new File([blob], 'text.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file] });
-    } else {
-      const link = document.createElement('a');
-      link.download = 'text.png';
-      link.href = URL.createObjectURL(file);
-      link.click();
-    }
-    toolbar.style.display = 'flex';
-    document.body.removeChild(tempDiv);
-  });
-}
-
-shotBtn.onclick = takeScreenshot;
-
-let twoFinger = false;
-document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
-document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
 </script>
 
 </body>
