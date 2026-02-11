@@ -199,7 +199,7 @@
     templates = templates.slice(0, 10);
     localStorage.setItem('templates', JSON.stringify(templates));
     renderTemplates();
-    editor.value = ''; // <-- clear textbox after saving
+    editor.value = ''; // clear textbox after saving
   };
 
   boldBtn.onclick = () => {
@@ -224,7 +224,17 @@
 
   async function takeScreenshot() {
     toolbar.style.display = 'none';
+
     const canvas = await html2canvas(editor, { backgroundColor: null });
+
+    // Add watermark text
+    const ctx = canvas.getContext('2d');
+    const text = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.textAlign = "center";
+    ctx.fillText(text, canvas.width / 2, canvas.height - 10);
+
     canvas.toBlob(async blob => {
       const file = new File([blob], 'text.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
