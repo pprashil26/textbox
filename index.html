@@ -3,34 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Minimal Text</title>
-
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-512.png">
-<link rel="apple-touch-icon" href="icon-512.png">
-<meta name="theme-color" content="#3b2f2f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-
-/* ✅ SELF-HOSTED FONT */
 @font-face {
-  font-family: 'Patrick Hand Local';
-  src: url('PatrickHand-Regular.woff2') format('woff2');
+  font-family: 'PatrickHandLocal';
+  src: url('fonts/PatrickHand-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   background: #3b2f2f;
   color: #fff;
   display: flex;
@@ -51,217 +41,132 @@ body {
   background: #bbf7d0;
   border-radius: 14px;
   margin-top: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   overflow: hidden;
-  font-family: inherit;
-}
-
-#editor:focus {
-  outline: 2px solid #22c55e;
-  outline-offset: 2px;
 }
 
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
-
-#charCount {
-  width: 92%;
-  max-width: 480px;
-  text-align: right;
-  font-size: 12px;
-  color: #ddd;
-  margin-top: 4px;
-  margin-bottom: 6px;
-}
+#editor.important { box-shadow: 0 0 0 3px #ef4444 inset; }
 
 .toolbar {
   width: 92%;
   max-width: 480px;
   display: flex;
-  gap: 10px;
-  margin: 10px 0 6px;
+  gap: 8px;
+  margin: 10px 0;
 }
 
 .toolbar button {
   flex: 1;
-  padding: 8px 0;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 8px;
   border: none;
   border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-}
-
-.toolbar button.active { background: #2563eb; }
-
-.templates-controls {
-  width: 92%;
-  max-width: 480px;
-  display: flex;
-  gap: 6px;
-  margin: 10px 0 6px;
-}
-
-.templates-controls button {
-  flex: 1;
-  border: none;
-  border-radius: 10px;
-  padding: 6px 8px;
-  font-size: 12px;
   background: #4a3838;
   color: #fff;
   font-weight: 600;
 }
 
-.templates {
-  width: 92%;
-  max-width: 480px;
+.toolbar button.active {
+  background: #2563eb;
 }
-
-.template-item {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  align-items: flex-start;
-}
-
-.template-text {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-size: 15px;
-  text-align: left;
-  white-space: pre-wrap;
-}
-
-.pin, .delete {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border: none;
-  border-radius: 50%;
-  background: #4a3838;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2px;
-}
-
-.pin.active {
-  background: #fff;
-  color: #4a3838;
-}
-
 </style>
 </head>
 <body>
 
-<textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
-<div id="charCount">160</div>
+<textarea id="editor" placeholder="Start typing..."></textarea>
 
-<div class="toolbar" id="toolbar">
-  <button id="boldBtn">B</button>
+<div class="toolbar">
+  <button id="boldBtn">BOLD</button>
   <button id="capsBtn">CAPS</button>
-  <button id="copyBtn">📋 Copy</button>
-  <button id="clearBtn">🗑 Clear</button>
-  <button id="shotBtn">📸</button>
-</div>
-
-<div class="templates-controls">
-  <button id="addTemplateBtn">+ Save</button>
-  <button id="toggleTemplatesBtn">Hide</button>
-  <button id="exportTemplatesBtn">Export</button>
-  <button id="importTemplatesBtn">Import</button>
-  <input type="file" id="importFile" style="display:none;">
-</div>
-
-<div class="templates" id="templatesSection">
-  <div id="templateList"></div>
+  <button id="importantBtn">IMPORTANT</button>
+  <button id="saveBtn">SAVE</button>
+  <button id="shotBtn">SHOT</button>
 </div>
 
 <script>
+const editor = document.getElementById("editor");
+const boldBtn = document.getElementById("boldBtn");
+const capsBtn = document.getElementById("capsBtn");
+const importantBtn = document.getElementById("importantBtn");
+const saveBtn = document.getElementById("saveBtn");
+const shotBtn = document.getElementById("shotBtn");
 
-const editor = document.getElementById('editor');
-const boldBtn = document.getElementById('boldBtn');
-const capsBtn = document.getElementById('capsBtn');
-const copyBtn = document.getElementById('copyBtn');
-const clearBtn = document.getElementById('clearBtn');
-const shotBtn = document.getElementById('shotBtn');
-
-const addTemplateBtn = document.getElementById('addTemplateBtn');
-const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
-const exportTemplatesBtn = document.getElementById('exportTemplatesBtn');
-const importTemplatesBtn = document.getElementById('importTemplatesBtn');
-const importFile = document.getElementById('importFile');
-
-const templateList = document.getElementById('templateList');
-
-let templates = JSON.parse(localStorage.getItem('templates') || '[]');
-let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
-
-/* ============================= */
-/* Screenshot (UPDATED ONLY HERE) */
-/* ============================= */
-
-async function takeScreenshot() {
-
-  // ✅ MICRO-OPTIMIZATION: wait for font to fully load
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
-  }
-
-  const toolbar = document.getElementById('toolbar');
-  toolbar.style.display = 'none';
-
-  const tempDiv = document.createElement('div');
-  tempDiv.style.width = editor.offsetWidth + 'px';
-  tempDiv.style.padding = '18px';
-  tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
-  tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
-  tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
-  tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
-  tempDiv.style.background = '#bbf7d0';
-  tempDiv.style.borderRadius = '14px';
-  tempDiv.style.fontFamily = "'Patrick Hand Local'";
-
-  const pre = document.createElement('pre');
-  pre.style.margin = '0';
-  pre.style.font = 'inherit';
-  pre.style.whiteSpace = 'pre-wrap';
-  pre.style.color = '#3b2f2f';
-  pre.textContent = editor.value;
-
-  tempDiv.appendChild(pre);
-  document.body.appendChild(tempDiv);
-
-  const canvas = await html2canvas(tempDiv, { backgroundColor: null });
-
-  canvas.toBlob(async blob => {
-    const file = new File([blob], 'text.png', { type: 'image/png' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file] });
-    } else {
-      const link = document.createElement('a');
-      link.download = 'text.png';
-      link.href = URL.createObjectURL(file);
-      link.click();
-    }
-
-    toolbar.style.display = 'flex';
-    document.body.removeChild(tempDiv);
-  });
+function saveState() {
+  localStorage.setItem("note", editor.value);
+  localStorage.setItem("bold", editor.classList.contains("bold"));
+  localStorage.setItem("caps", editor.classList.contains("caps"));
+  localStorage.setItem("important", editor.classList.contains("important"));
 }
 
-shotBtn.onclick = takeScreenshot;
+function loadState() {
+  editor.value = localStorage.getItem("note") || "";
+  if (localStorage.getItem("bold") === "true") {
+    editor.classList.add("bold");
+    boldBtn.classList.add("active");
+  }
+  if (localStorage.getItem("caps") === "true") {
+    editor.classList.add("caps");
+    capsBtn.classList.add("active");
+  }
+  if (localStorage.getItem("important") === "true") {
+    editor.classList.add("important");
+    importantBtn.classList.add("active");
+  }
+}
 
+boldBtn.onclick = () => {
+  editor.classList.toggle("bold");
+  boldBtn.classList.toggle("active");
+  saveState();
+};
+
+capsBtn.onclick = () => {
+  editor.classList.toggle("caps");
+  capsBtn.classList.toggle("active");
+  saveState();
+};
+
+importantBtn.onclick = () => {
+  editor.classList.toggle("important");
+  importantBtn.classList.toggle("active");
+  saveState();
+};
+
+saveBtn.onclick = saveState;
+
+shotBtn.onclick = async () => {
+  await document.fonts.ready;
+
+  const temp = document.createElement("div");
+  temp.style.width = editor.offsetWidth + "px";
+  temp.style.padding = "18px";
+  temp.style.background = "#bbf7d0";
+  temp.style.borderRadius = "14px";
+  temp.style.fontSize = "22px";
+  temp.style.lineHeight = "1.5";
+  temp.style.fontFamily = "PatrickHandLocal";
+  temp.style.whiteSpace = "pre-wrap";
+  temp.style.color = "#3b2f2f";
+  temp.style.fontWeight = editor.classList.contains("bold") ? "bold" : "normal";
+  temp.style.textTransform = editor.classList.contains("caps") ? "uppercase" : "none";
+  temp.textContent = editor.value;
+
+  document.body.appendChild(temp);
+
+  const canvas = await html2canvas(temp, { backgroundColor: null });
+
+  const link = document.createElement("a");
+  link.download = "note.png";
+  link.href = canvas.toDataURL();
+  link.click();
+
+  document.body.removeChild(temp);
+};
+
+editor.addEventListener("input", saveState);
+
+loadState();
 </script>
+
 </body>
 </html>
