@@ -6,7 +6,6 @@
 
 <title>Minimal Text</title>
 
-<!-- PWA + Icons -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-512.png">
 <link rel="apple-touch-icon" href="icon-512.png">
@@ -17,165 +16,142 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #3b2f2f;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+* { box-sizing: border-box; }
 
-  #editor {
-    width: 92%;
-    max-width: 480px;
-    height: 32vh;
-    padding: 18px;
-    font-size: 22px;
-    line-height: 1.5;
-    border: none;
-    outline: none;
-    resize: none;
-    background: #bbf7d0;
-    border-radius: 14px;
-    margin-top: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: box-shadow 0.2s ease;
-  }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #3b2f2f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  #editor:focus {
-    outline: 2px solid #22c55e;
-    outline-offset: 2px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  }
+#editor {
+  width: 92%;
+  max-width: 480px;
+  height: 32vh;
+  padding: 18px;
+  font-size: 22px;
+  line-height: 1.5;
+  border: none;
+  outline: none;
+  resize: none;
+  background: #bbf7d0;
+  border-radius: 14px;
+  margin-top: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
 
-  #editor.bold { font-weight: bold; }
-  #editor.caps { text-transform: uppercase; }
+#editor:focus {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
+}
 
-  .toolbar {
-    width: 92%;
-    max-width: 480px;
-    display: flex;
-    gap: 10px;
-    margin: 10px 0 6px;
-  }
+#editor.bold { font-weight: bold; }
+#editor.caps { text-transform: uppercase; }
 
-  .toolbar button {
-    flex: 1;
-    padding: 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    border-radius: 10px;
-    background: #4a3838;
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: transform 0.1s ease, background 0.2s ease;
-  }
+.toolbar {
+  width: 92%;
+  max-width: 480px;
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
 
-  .toolbar button.active { background: #2563eb; color: #fff; }
-  .toolbar button:active { transform: scale(0.95); background: #5b4545; }
+.toolbar button {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+}
 
-  .templates-toggle {
-    width: 92%;
-    max-width: 480px;
-    display: flex;
-    justify-content: flex-end;
-    margin: 10px 0 4px;
-  }
+.toolbar button.active { background: #2563eb; }
 
-  .templates-toggle button {
-    border: none;
-    border-radius: 10px;
-    padding: 4px 10px;
-    font-size: 12px;
-    background: #4a3838;
-    color: #fff;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-    cursor: pointer;
-    transition: transform 0.1s ease;
-  }
-  .templates-toggle button:active { transform: scale(0.95); }
+.templates-toggle {
+  width: 92%;
+  max-width: 480px;
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 4px;
+}
 
-  .templates {
-    width: 92%;
-    max-width: 480px;
-    margin-top: 0;
-  }
+.templates-toggle button {
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #4a3838;
+  color: #fff;
+}
 
-  .templates h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #ddd;
-    margin-bottom: 6px;
-  }
+.templates {
+  width: 92%;
+  max-width: 480px;
+}
 
-  .template-item {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-    align-items: center;
-  }
+.templates h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 6px;
+}
 
-  .template-item button.template-text {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    background: #4a3838;
-    color: #fff;
-    font-size: 15px;
-    text-align: left;
-    white-space: pre-wrap;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform 0.1s ease;
-  }
+.template-item {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: flex-start; /* TOP ALIGN */
+}
 
-  .template-item button.template-text:active { transform: scale(0.97); }
+.template-text {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-size: 15px;
+  text-align: left;
+  white-space: pre-wrap;
+}
 
-  .template-item .pin,
-  .template-item .delete {
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 8px;
-    background: #4a3838;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform 0.1s ease;
-  }
+.pin, .delete {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #4a3838;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2px; /* slight visual adjustment */
+}
 
-  .template-item .pin:active,
-  .template-item .delete:active { transform: scale(0.95); }
+.pin.active {
+  background: #5b4545; /* subtle darker when pinned */
+}
 
-  .pin.active {
-    background: #2563eb;
-  }
-
-  .templates .add {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: none;
-    border-radius: 10px;
-    background: #4a3838;
-    color: #fff;
-    font-weight: 600;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: transform 0.1s ease;
-  }
-
-  .templates .add:active { transform: scale(0.97); }
-
+.templates .add {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -207,10 +183,8 @@ const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const shotBtn = document.getElementById('shotBtn');
-
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
-const templatesSection = document.getElementById('templatesSection');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
@@ -218,14 +192,13 @@ let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 't
 
 function renderTemplates() {
   templateList.innerHTML = '';
+  if (!templatesVisible) return;
 
-  const visibleTemplates = templatesVisible ? templates : [];
-
-  const pinned = visibleTemplates.filter(t => t.pinned);
-  const unpinned = visibleTemplates.filter(t => !t.pinned);
+  const pinned = templates.filter(t => t.pinned);
+  const unpinned = templates.filter(t => !t.pinned);
   const allTemplates = [...pinned, ...unpinned];
 
-  allTemplates.forEach((t, index) => {
+  allTemplates.forEach((t) => {
     const row = document.createElement('div');
     row.className = 'template-item';
 
@@ -236,7 +209,8 @@ function renderTemplates() {
 
     const pinBtn = document.createElement('button');
     pinBtn.className = 'pin';
-    if(t.pinned) pinBtn.classList.add('active');
+    pinBtn.textContent = '📌';
+    if (t.pinned) pinBtn.classList.add('active');
     pinBtn.onclick = () => {
       t.pinned = !t.pinned;
       localStorage.setItem('templates', JSON.stringify(templates));
@@ -247,7 +221,7 @@ function renderTemplates() {
     delBtn.className = 'delete';
     delBtn.textContent = '×';
     delBtn.onclick = () => {
-      templates.splice(index, 1);
+      templates = templates.filter(temp => temp !== t);
       localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
@@ -258,6 +232,7 @@ function renderTemplates() {
     templateList.appendChild(row);
   });
 }
+
 renderTemplates();
 
 toggleTemplatesBtn.onclick = () => {
@@ -331,7 +306,7 @@ shotBtn.onclick = takeScreenshot;
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
-
 </script>
+
 </body>
 </html>
