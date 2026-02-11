@@ -84,26 +84,40 @@ body {
 
 .toolbar button.active { background: #2563eb; }
 
-.templates-toggle {
+.templates {
   width: 92%;
   max-width: 480px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 10px 0 4px;
 }
 
-.templates-toggle button {
+.templates h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 6px;
+}
+
+/* BUTTON ROW UNDER HEADER */
+.template-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.template-actions button {
+  flex: 1;
+  font-size: 13px;
+  padding: 8px 6px;
   border: none;
   border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 12px;
   background: #4a3838;
   color: #fff;
+  font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.templates-toggle .backup-menu {
+/* Backup menu */
+.backup-menu {
   position: relative;
 }
 
@@ -111,7 +125,7 @@ body {
   display: none;
   position: absolute;
   right: 0;
-  top: 28px;
+  top: 36px;
   background: #4a3838;
   border-radius: 10px;
   overflow: hidden;
@@ -131,23 +145,12 @@ body {
   cursor: pointer;
 }
 
-.templates {
-  width: 92%;
-  max-width: 480px;
-}
-
-.templates h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ddd;
-  margin-bottom: 6px;
-}
-
+/* TEMPLATES */
 .template-item {
   display: flex;
   gap: 6px;
   margin-bottom: 8px;
-  align-items: flex-start; /* top align */
+  align-items: flex-start;
 }
 
 .template-text {
@@ -184,15 +187,7 @@ body {
 }
 
 .templates .add {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
+  display: none; /* handled in button row */
 }
 </style>
 </head>
@@ -209,20 +204,19 @@ body {
   <button id="shotBtn">📸</button>
 </div>
 
-<div class="templates-toggle">
-  <button id="toggleTemplatesBtn">Hide Templates</button>
-  <div class="backup-menu">
-    <button id="backupBtn">Backup</button>
-    <div class="backup-options" id="backupOptions">
-      <button id="exportBtn">Export Templates</button>
-      <button id="importBtn">Import Templates</button>
-    </div>
-  </div>
-</div>
-
 <div class="templates" id="templatesSection">
   <h3>Templates</h3>
-  <button class="add" id="addTemplateBtn">+ Save current text as template</button>
+  <div class="template-actions">
+    <button id="addTemplateBtn">+ Save current text as template</button>
+    <button id="toggleTemplatesBtn">Hide Templates</button>
+    <div class="backup-menu">
+      <button id="backupBtn">Backup</button>
+      <div class="backup-options" id="backupOptions">
+        <button id="exportBtn">Export Templates</button>
+        <button id="importBtn">Import Templates</button>
+      </div>
+    </div>
+  </div>
   <div id="templateList"></div>
 </div>
 
@@ -297,9 +291,13 @@ toggleTemplatesBtn.onclick = () => {
   renderTemplates();
 };
 
-backupBtn.onclick = () => {
+// Backup menu toggle
+backupBtn.onclick = (e) => {
+  e.stopPropagation();
   backupOptions.style.display = backupOptions.style.display === 'block' ? 'none' : 'block';
 };
+document.addEventListener('click', () => { backupOptions.style.display = 'none'; });
+backupOptions.addEventListener('click', e => e.stopPropagation());
 
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
@@ -338,7 +336,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.color = '#3b2f2f'; // dark brown text
+  tempDiv.style.color = '#3b2f2f';
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
@@ -366,11 +364,11 @@ async function takeScreenshot() {
 }
 
 shotBtn.onclick = takeScreenshot;
-
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
 
+// Export / Import
 exportBtn.onclick = () => {
   const dataStr = JSON.stringify(templates, null, 2);
   const blob = new Blob([dataStr], {type: "application/json"});
