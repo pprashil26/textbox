@@ -90,16 +90,15 @@ body {
   max-width: 480px;
   display: flex;
   gap: 6px;
-  margin: 10px 0 4px;
-  flex-wrap: wrap;
+  margin: 10px 0 6px;
 }
 
 .templates-controls button {
   flex: 1;
   border: none;
   border-radius: 10px;
-  padding: 6px 10px;
-  font-size: 13px;
+  padding: 6px 8px;
+  font-size: 12px;
   background: #4a3838;
   color: #fff;
   font-weight: 600;
@@ -108,13 +107,6 @@ body {
 .templates {
   width: 92%;
   max-width: 480px;
-}
-
-.templates h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ddd;
-  margin-bottom: 6px;
 }
 
 .template-item {
@@ -153,19 +145,8 @@ body {
 }
 
 .pin.active {
-  background: #fff; 
+  background: #fff;
   color: #4a3838;
-}
-
-.templates .add {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
 }
 </style>
 </head>
@@ -183,19 +164,14 @@ body {
 </div>
 
 <div class="templates-controls">
-  <button id="addTemplateBtn">+ Save as template</button>
-  <button id="toggleTemplatesBtn">Hide Templates</button>
-  <button id="backupBtn">Backup</button>
-</div>
-
-<div id="backupSection" style="display:none; width:92%; max-width:480px; margin-bottom:10px; gap:6px; flex-wrap:wrap; display:flex;">
-  <button id="exportTemplatesBtn">Export Templates</button>
-  <button id="importTemplatesBtn">Import Templates</button>
+  <button id="addTemplateBtn">+ Save</button>
+  <button id="toggleTemplatesBtn">Hide</button>
+  <button id="exportTemplatesBtn">Export</button>
+  <button id="importTemplatesBtn">Import</button>
   <input type="file" id="importFile" style="display:none;">
 </div>
 
 <div class="templates" id="templatesSection">
-  <h3>Templates</h3>
   <div id="templateList"></div>
 </div>
 
@@ -209,13 +185,12 @@ const shotBtn = document.getElementById('shotBtn');
 
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
-const backupBtn = document.getElementById('backupBtn');
-const backupSection = document.getElementById('backupSection');
 const exportTemplatesBtn = document.getElementById('exportTemplatesBtn');
 const importTemplatesBtn = document.getElementById('importTemplatesBtn');
 const importFile = document.getElementById('importFile');
 
 const templateList = document.getElementById('templateList');
+
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
@@ -264,15 +239,13 @@ function renderTemplates() {
 
 renderTemplates();
 
-// Toggle templates
 toggleTemplatesBtn.onclick = () => {
   templatesVisible = !templatesVisible;
   localStorage.setItem('templatesVisible', JSON.stringify(templatesVisible));
-  toggleTemplatesBtn.textContent = templatesVisible ? 'Hide Templates' : 'Show Templates';
+  toggleTemplatesBtn.textContent = templatesVisible ? 'Hide' : 'Show';
   renderTemplates();
 };
 
-// Add template
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
   templates.unshift({ text: editor.value.trim(), pinned: false });
@@ -282,12 +255,6 @@ addTemplateBtn.onclick = () => {
   updateCharCount();
 };
 
-// Backup toggle
-backupBtn.onclick = () => {
-  backupSection.style.display = backupSection.style.display==='flex'?'none':'flex';
-};
-
-// Export templates
 exportTemplatesBtn.onclick = () => {
   const data = templates.map(t => t.text).join('\n---\n');
   const blob = new Blob([data], {type:'text/plain'});
@@ -297,7 +264,6 @@ exportTemplatesBtn.onclick = () => {
   link.click();
 };
 
-// Import templates
 importTemplatesBtn.onclick = () => importFile.click();
 importFile.onchange = (e) => {
   const file = e.target.files[0];
@@ -313,31 +279,29 @@ importFile.onchange = (e) => {
   reader.readAsText(file);
 };
 
-// Bold, Caps, Copy, Clear
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
 capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
+
 copyBtn.onclick = async () => {
   await navigator.clipboard.writeText(editor.value);
   copyBtn.textContent = '✓ Copied';
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
+
 clearBtn.onclick = () => { editor.value = ''; updateCharCount(); };
 
-// Character countdown
 const charCount = document.getElementById('charCount');
 function updateCharCount() {
   charCount.textContent = 160 - editor.value.length;
 }
 editor.addEventListener('input', () => { updateCharCount(); autoGrow(); });
 
-// Auto-grow
 function autoGrow() {
   editor.style.height = 'auto';
   editor.style.height = (editor.scrollHeight) + 'px';
 }
 autoGrow();
 
-// Screenshot
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
   toolbar.style.display = 'none';
