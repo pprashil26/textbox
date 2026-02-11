@@ -3,148 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Textbox</title>
+
+<title>Minimal Text</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="theme-color" content="#3b2f2f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#3b2b2b;
-  display:flex;
-  justify-content:center;
-  padding:20px 10px;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #3b2f2f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.app{
-  width:100%;
-  max-width:420px;
+#editor {
+  width: 92%;
+  max-width: 480px;
+  min-height: 120px;
+  padding: 18px;
+  font-size: 22px;
+  line-height: 1.5;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: #bbf7d0;
+  border-radius: 14px;
+  margin-top: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-textarea{
-  width:100%;
-  min-height:120px;
-  padding:14px;
-  font-size:22px;
-  border-radius:12px;
-  border:none;
-  resize:none;
-  outline:none;
-  background:#bbf7d0;
-  box-shadow:0 2px 6px rgba(0,0,0,0.15);
-  white-space:pre-wrap;
+#editor:focus {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
 }
 
-textarea:focus{
-  box-shadow:0 0 0 2px #ffffff;
+#editor.bold { font-weight: bold; }
+#editor.caps { text-transform: uppercase; }
+
+.toolbar {
+  width: 92%;
+  max-width: 480px;
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 6px;
 }
 
-.toolbar{
-  display:flex;
-  justify-content:space-between;
-  margin-top:10px;
-  gap:6px;
+.toolbar button {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
 }
 
-.toolbar button{
-  flex:1;
-  padding:10px 0;
-  border:none;
-  border-radius:10px;
-  background:#4a3838;
-  color:white;
-  font-size:16px;
+.toolbar button.active { background: #2563eb; }
+
+.templates-toggle {
+  width: 92%;
+  max-width: 480px;
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 4px;
 }
 
-.toolbar button.active{
-  background:#5a4444;
+.templates-toggle button {
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #4a3838;
+  color: #fff;
 }
 
-.templates-section{
-  margin-top:16px;
+.templates {
+  width: 92%;
+  max-width: 480px;
 }
 
-.templates-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:6px;
+.templates h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+  margin-bottom: 6px;
 }
 
-.templates-header button{
-  background:#4a3838;
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:6px 10px;
-  font-size:13px;
+.template-item {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: flex-start;
 }
 
-.templates{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.template-text {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-size: 15px;
+  text-align: left;
+  white-space: pre-wrap;
 }
 
-.template-item{
-  position:relative;
-  background:#4a3838;
-  color:white;
-  border-radius:10px;
-  padding:12px 12px 18px 12px;
-  white-space:pre-wrap;
-  font-size:15px;
+.pin, .delete {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #4a3838;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2px;
 }
 
-.template-actions{
-  position:absolute;
-  top:6px;
-  right:6px;
-  display:flex;
-  gap:6px;
+.pin.active {
+  background: #ffffff;
+  color: #000;
+  border-radius: 50%;
 }
 
-.template-actions button{
-  width:26px;
-  height:26px;
-  border:none;
-  border-radius:50%;
-  background:#4a3838;
-  color:white;
-  font-size:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
-}
-
-/* 🔵 PIN ACTIVE STATE — ONLY CHANGE */
-.template-actions button.pinned{
-  background:white;
-  color:white;
+.templates .add {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
 }
 </style>
 </head>
-
 <body>
-<div class="app">
 
-<textarea id="editor" maxlength="160"></textarea>
+<textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
 
-<div class="toolbar">
+<div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
   <button id="capsBtn">CAPS</button>
-  <button id="copyBtn">Copy</button>
-  <button id="clearBtn">Clear</button>
+  <button id="copyBtn">📋 Copy</button>
+  <button id="clearBtn">🗑 Clear</button>
+  <button id="shotBtn">📸</button>
 </div>
 
-<div class="templates-section">
-  <div class="templates-header">
-    <button id="addTemplateBtn">Save current text</button>
-    <button id="toggleTemplatesBtn">Hide</button>
-  </div>
-  <div class="templates" id="templates"></div>
+<div class="templates-toggle">
+  <button id="toggleTemplatesBtn">Hide Templates</button>
 </div>
 
+<div class="templates" id="templatesSection">
+  <h3>Templates</h3>
+  <button class="add" id="addTemplateBtn">+ Save current text as template</button>
+  <div id="templateList"></div>
 </div>
 
 <script>
@@ -153,87 +185,143 @@ const boldBtn = document.getElementById('boldBtn');
 const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
+const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
+const templateList = document.getElementById('templateList');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
-const templatesDiv = document.getElementById('templates');
 
-let bold=false;
-let caps=false;
-let templates = JSON.parse(localStorage.getItem('templates')||'[]');
-let hidden=false;
+let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
 
-boldBtn.onclick=()=>{
-  bold=!bold;
-  editor.style.fontWeight=bold?'bold':'normal';
-  boldBtn.classList.toggle('active');
-};
+/* ✅ AUTO GROW */
+function autoGrow() {
+  editor.style.height = 'auto';
+  editor.style.height = editor.scrollHeight + 'px';
+}
+editor.addEventListener('input', autoGrow);
+window.addEventListener('load', autoGrow);
 
-capsBtn.onclick=()=>{
-  caps=!caps;
-  editor.value = caps ? editor.value.toUpperCase() : editor.value.toLowerCase();
-  capsBtn.classList.toggle('active');
-};
+function renderTemplates() {
+  templateList.innerHTML = '';
+  if (!templatesVisible) return;
 
-copyBtn.onclick=()=>{
-  navigator.clipboard.writeText(editor.value);
-};
+  const pinned = templates.filter(t => t.pinned);
+  const unpinned = templates.filter(t => !t.pinned);
+  const allTemplates = [...pinned, ...unpinned];
 
-clearBtn.onclick=()=>{
-  editor.value='';
-};
+  allTemplates.forEach((t) => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
 
-addTemplateBtn.onclick=()=>{
-  if(!editor.value.trim())return;
-  templates.unshift({text:editor.value.trim(),pinned:false});
-  localStorage.setItem('templates',JSON.stringify(templates));
-  editor.value='';
-  renderTemplates();
-};
+    const textBtn = document.createElement('button');
+    textBtn.className = 'template-text';
+    textBtn.textContent = t.text;
+    textBtn.onclick = () => {
+      editor.value = t.text;
+      autoGrow();
+    };
 
-toggleTemplatesBtn.onclick=()=>{
-  hidden=!hidden;
-  templatesDiv.style.display=hidden?'none':'flex';
-  toggleTemplatesBtn.textContent=hidden?'Show':'Hide';
-};
-
-function renderTemplates(){
-  templatesDiv.innerHTML='';
-  templates.forEach((tpl,index)=>{
-    const div=document.createElement('div');
-    div.className='template-item';
-    div.textContent=tpl.text;
-    div.onclick=()=>editor.value=tpl.text;
-
-    const actions=document.createElement('div');
-    actions.className='template-actions';
-
-    const pin=document.createElement('button');
-    pin.innerHTML='📌';
-    if(tpl.pinned) pin.classList.add('pinned');
-    pin.onclick=(e)=>{
-      e.stopPropagation();
-      tpl.pinned=!tpl.pinned;
-      localStorage.setItem('templates',JSON.stringify(templates));
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'pin';
+    pinBtn.textContent = '📌';
+    if (t.pinned) pinBtn.classList.add('active');
+    pinBtn.onclick = () => {
+      t.pinned = !t.pinned;
+      localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
 
-    const del=document.createElement('button');
-    del.innerHTML='✕';
-    del.onclick=(e)=>{
-      e.stopPropagation();
-      templates.splice(index,1);
-      localStorage.setItem('templates',JSON.stringify(templates));
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete';
+    delBtn.textContent = '×';
+    delBtn.onclick = () => {
+      templates = templates.filter(temp => temp !== t);
+      localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
 
-    actions.appendChild(pin);
-    actions.appendChild(del);
-    div.appendChild(actions);
-    templatesDiv.appendChild(div);
+    row.appendChild(textBtn);
+    row.appendChild(pinBtn);
+    row.appendChild(delBtn);
+    templateList.appendChild(row);
   });
 }
 
 renderTemplates();
+
+toggleTemplatesBtn.onclick = () => {
+  templatesVisible = !templatesVisible;
+  localStorage.setItem('templatesVisible', JSON.stringify(templatesVisible));
+  toggleTemplatesBtn.textContent = templatesVisible ? 'Hide Templates' : 'Show Templates';
+  renderTemplates();
+};
+
+addTemplateBtn.onclick = () => {
+  if (!editor.value.trim()) return;
+  templates.unshift({ text: editor.value.trim(), pinned: false });
+  templates = templates.slice(0, 10);
+  localStorage.setItem('templates', JSON.stringify(templates));
+  renderTemplates();
+  editor.value = '';
+  autoGrow();
+};
+
+boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
+capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
+
+copyBtn.onclick = async () => {
+  await navigator.clipboard.writeText(editor.value);
+  copyBtn.textContent = '✓ Copied';
+  setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
+};
+
+clearBtn.onclick = () => { editor.value = ''; autoGrow(); };
+
+async function takeScreenshot() {
+  const toolbar = document.getElementById('toolbar');
+  toolbar.style.display = 'none';
+
+  const tempDiv = document.createElement('div');
+  tempDiv.style.width = editor.offsetWidth + 'px';
+  tempDiv.style.padding = '18px';
+  tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
+  tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
+  tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
+  tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
+  tempDiv.style.background = '#bbf7d0';
+  tempDiv.style.borderRadius = '14px';
+
+  const pre = document.createElement('pre');
+  pre.style.margin = '0';
+  pre.style.font = 'inherit';
+  pre.style.whiteSpace = 'pre-wrap';
+  pre.textContent = editor.value;
+  tempDiv.appendChild(pre);
+
+  document.body.appendChild(tempDiv);
+  const canvas = await html2canvas(tempDiv, { backgroundColor: null });
+
+  canvas.toBlob(async blob => {
+    const file = new File([blob], 'text.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+    } else {
+      const link = document.createElement('a');
+      link.download = 'text.png';
+      link.href = URL.createObjectURL(file);
+      link.click();
+    }
+    toolbar.style.display = 'flex';
+    document.body.removeChild(tempDiv);
+  });
+}
+
+shotBtn.onclick = takeScreenshot;
+
+let twoFinger = false;
+document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
+document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
 </script>
+
 </body>
 </html>
