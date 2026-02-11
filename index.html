@@ -1,200 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Textbox Tool</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Textbox</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: sans-serif;
-    background: #3b2f2f;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#3b2b2b;
+  display:flex;
+  justify-content:center;
+  padding:20px 10px;
 }
 
-.container {
-    width: 95%;
-    max-width: 600px;
-    margin-top: 20px;
+.app{
+  width:100%;
+  max-width:420px;
 }
 
-textarea {
-    width: 100%;
-    min-height: 150px;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    resize: vertical;
-    background: #bbf7d0;
-    white-space: pre-wrap;
-    outline: none;
+textarea{
+  width:100%;
+  min-height:120px;
+  padding:14px;
+  font-size:22px;
+  border-radius:12px;
+  border:none;
+  resize:none;
+  outline:none;
+  background:#bbf7d0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+  white-space:pre-wrap;
 }
 
-textarea:focus {
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+textarea:focus{
+  box-shadow:0 0 0 2px #ffffff;
 }
 
-.toolbar {
-    display: flex;
-    gap: 10px;
-    margin: 10px 0;
+.toolbar{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  gap:6px;
 }
 
-button {
-    background: #4a3838;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
+.toolbar button{
+  flex:1;
+  padding:10px 0;
+  border:none;
+  border-radius:10px;
+  background:#4a3838;
+  color:white;
+  font-size:16px;
 }
 
-button:hover {
-    opacity: 0.9;
+.toolbar button.active{
+  background:#5a4444;
 }
 
-.templates-header {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.templates-section{
+  margin-top:16px;
 }
 
-.templates-container {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.templates-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
 }
 
-.template-item {
-    background: #4a3838;
-    padding: 10px;
-    border-radius: 6px;
-    white-space: pre-wrap;
-    position: relative;
+.templates-header button{
+  background:#4a3838;
+  color:white;
+  border:none;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:13px;
 }
 
-.template-actions {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    display: flex;
-    gap: 6px;
+.templates{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
-.icon-btn {
-    width: 24px;
-    height: 24px;
-    background: #4a3838;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
+.template-item{
+  position:relative;
+  background:#4a3838;
+  color:white;
+  border-radius:10px;
+  padding:12px 12px 18px 12px;
+  white-space:pre-wrap;
+  font-size:15px;
 }
 
-/* PIN ACTIVE STYLE */
-.icon-btn.pinned {
-    background: white;
-    color: #4a3838;
+.template-actions{
+  position:absolute;
+  top:6px;
+  right:6px;
+  display:flex;
+  gap:6px;
 }
 
-.hidden {
-    display: none;
+.template-actions button{
+  width:26px;
+  height:26px;
+  border:none;
+  border-radius:50%;
+  background:#4a3838;
+  color:white;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+/* 🔵 PIN ACTIVE STATE — ONLY CHANGE */
+.template-actions button.pinned{
+  background:white;
+  color:white;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
+<div class="app">
 
-<textarea id="textbox" placeholder="Type here..."></textarea>
+<textarea id="editor" maxlength="160"></textarea>
 
 <div class="toolbar">
-    <button onclick="saveTemplate()">Save current text as template</button>
+  <button id="boldBtn">B</button>
+  <button id="capsBtn">CAPS</button>
+  <button id="copyBtn">Copy</button>
+  <button id="clearBtn">Clear</button>
 </div>
 
-<div class="templates-header">
-    <span>Templates</span>
-    <button onclick="toggleTemplates()">Hide</button>
+<div class="templates-section">
+  <div class="templates-header">
+    <button id="addTemplateBtn">Save current text</button>
+    <button id="toggleTemplatesBtn">Hide</button>
+  </div>
+  <div class="templates" id="templates"></div>
 </div>
-
-<div id="templates" class="templates-container"></div>
 
 </div>
 
 <script>
-let templates = [];
-let templatesVisible = true;
+const editor = document.getElementById('editor');
+const boldBtn = document.getElementById('boldBtn');
+const capsBtn = document.getElementById('capsBtn');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+const addTemplateBtn = document.getElementById('addTemplateBtn');
+const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
+const templatesDiv = document.getElementById('templates');
 
-function saveTemplate() {
-    const text = document.getElementById("textbox").value.trim();
-    if (!text) return;
+let bold=false;
+let caps=false;
+let templates = JSON.parse(localStorage.getItem('templates')||'[]');
+let hidden=false;
 
-    templates.push({ text, pinned: false });
-    document.getElementById("textbox").value = "";
-    renderTemplates();
+boldBtn.onclick=()=>{
+  bold=!bold;
+  editor.style.fontWeight=bold?'bold':'normal';
+  boldBtn.classList.toggle('active');
+};
+
+capsBtn.onclick=()=>{
+  caps=!caps;
+  editor.value = caps ? editor.value.toUpperCase() : editor.value.toLowerCase();
+  capsBtn.classList.toggle('active');
+};
+
+copyBtn.onclick=()=>{
+  navigator.clipboard.writeText(editor.value);
+};
+
+clearBtn.onclick=()=>{
+  editor.value='';
+};
+
+addTemplateBtn.onclick=()=>{
+  if(!editor.value.trim())return;
+  templates.unshift({text:editor.value.trim(),pinned:false});
+  localStorage.setItem('templates',JSON.stringify(templates));
+  editor.value='';
+  renderTemplates();
+};
+
+toggleTemplatesBtn.onclick=()=>{
+  hidden=!hidden;
+  templatesDiv.style.display=hidden?'none':'flex';
+  toggleTemplatesBtn.textContent=hidden?'Show':'Hide';
+};
+
+function renderTemplates(){
+  templatesDiv.innerHTML='';
+  templates.forEach((tpl,index)=>{
+    const div=document.createElement('div');
+    div.className='template-item';
+    div.textContent=tpl.text;
+    div.onclick=()=>editor.value=tpl.text;
+
+    const actions=document.createElement('div');
+    actions.className='template-actions';
+
+    const pin=document.createElement('button');
+    pin.innerHTML='📌';
+    if(tpl.pinned) pin.classList.add('pinned');
+    pin.onclick=(e)=>{
+      e.stopPropagation();
+      tpl.pinned=!tpl.pinned;
+      localStorage.setItem('templates',JSON.stringify(templates));
+      renderTemplates();
+    };
+
+    const del=document.createElement('button');
+    del.innerHTML='✕';
+    del.onclick=(e)=>{
+      e.stopPropagation();
+      templates.splice(index,1);
+      localStorage.setItem('templates',JSON.stringify(templates));
+      renderTemplates();
+    };
+
+    actions.appendChild(pin);
+    actions.appendChild(del);
+    div.appendChild(actions);
+    templatesDiv.appendChild(div);
+  });
 }
 
-function toggleTemplates() {
-    templatesVisible = !templatesVisible;
-    document.getElementById("templates").classList.toggle("hidden", !templatesVisible);
-    document.querySelector(".templates-header button").innerText = templatesVisible ? "Hide" : "Show";
-}
-
-function togglePin(index) {
-    templates[index].pinned = !templates[index].pinned;
-    renderTemplates();
-}
-
-function deleteTemplate(index) {
-    templates.splice(index, 1);
-    renderTemplates();
-}
-
-function renderTemplates() {
-    const container = document.getElementById("templates");
-    container.innerHTML = "";
-
-    const sorted = [...templates].sort((a, b) => b.pinned - a.pinned);
-
-    sorted.forEach((template) => {
-        const originalIndex = templates.indexOf(template);
-
-        const div = document.createElement("div");
-        div.className = "template-item";
-        div.innerText = template.text;
-
-        const actions = document.createElement("div");
-        actions.className = "template-actions";
-
-        const pinBtn = document.createElement("button");
-        pinBtn.className = "icon-btn" + (template.pinned ? " pinned" : "");
-        pinBtn.innerHTML = "📌";
-        pinBtn.onclick = () => togglePin(originalIndex);
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "icon-btn";
-        delBtn.innerHTML = "✕";
-        delBtn.onclick = () => deleteTemplate(originalIndex);
-
-        actions.appendChild(pinBtn);
-        actions.appendChild(delBtn);
-        div.appendChild(actions);
-        container.appendChild(div);
-    });
-}
+renderTemplates();
 </script>
-
 </body>
 </html>
