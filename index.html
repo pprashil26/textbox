@@ -199,6 +199,7 @@
     templates = templates.slice(0, 10);
     localStorage.setItem('templates', JSON.stringify(templates));
     renderTemplates();
+    editor.value = ''; // <-- clear textbox after saving
   };
 
   boldBtn.onclick = () => {
