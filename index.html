@@ -46,7 +46,7 @@
     transition: box-shadow 0.2s ease;
   }
 
-  /* Focus ring on textbox */
+  /* Focus ring */
   #editor:focus {
     outline: 2px solid #22c55e;
     outline-offset: 2px;
@@ -77,22 +77,13 @@
     transition: transform 0.1s ease, background 0.2s ease;
   }
 
-  .toolbar button.active {
-    background: #2563eb;
-    color: #fff;
-  }
-
-  .toolbar button:active {
-    transform: scale(0.95);
-    background: linear-gradient(145deg,#d0d3d6,#f1f3f5);
-  }
+  .toolbar button.active { background: #2563eb; color: #fff; }
+  .toolbar button:active { transform: scale(0.95); background: linear-gradient(145deg,#d0d3d6,#f1f3f5); }
 
   .templates {
     width: 92%;
     max-width: 480px;
     margin-top: 10px;
-    max-height: 220px; /* scroll if overflow */
-    overflow-y: auto;
   }
 
   .templates h3 {
@@ -120,9 +111,7 @@
     transition: transform 0.1s ease;
   }
 
-  .template-item button.template-text:active {
-    transform: scale(0.97);
-  }
+  .template-item button.template-text:active { transform: scale(0.97); }
 
   .template-item button.delete {
     width: 36px;
@@ -136,9 +125,7 @@
     transition: transform 0.1s ease;
   }
 
-  .template-item button.delete:active {
-    transform: scale(0.95);
-  }
+  .template-item button.delete:active { transform: scale(0.95); }
 
   .templates .add {
     width: 100%;
@@ -154,9 +141,7 @@
     transition: transform 0.1s ease;
   }
 
-  .templates .add:active {
-    transform: scale(0.97);
-  }
+  .templates .add:active { transform: scale(0.97); }
 
   #watermarkToggle {
     display: flex;
@@ -193,124 +178,118 @@
 </div>
 
 <script>
-  const editor = document.getElementById('editor');
-  const boldBtn = document.getElementById('boldBtn');
-  const capsBtn = document.getElementById('capsBtn');
-  const copyBtn = document.getElementById('copyBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const shotBtn = document.getElementById('shotBtn');
-  const toolbar = document.getElementById('toolbar');
-  const watermarkToggle = document.getElementById('toggleWatermark');
+const editor = document.getElementById('editor');
+const boldBtn = document.getElementById('boldBtn');
+const capsBtn = document.getElementById('capsBtn');
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+const shotBtn = document.getElementById('shotBtn');
+const toolbar = document.getElementById('toolbar');
+const watermarkToggle = document.getElementById('toggleWatermark');
 
-  const addTemplateBtn = document.getElementById('addTemplateBtn');
-  const templateList = document.getElementById('templateList');
+const addTemplateBtn = document.getElementById('addTemplateBtn');
+const templateList = document.getElementById('templateList');
 
-  let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 
-  function renderTemplates() {
-    templateList.innerHTML = '';
-    templates.forEach((text, index) => {
-      const row = document.createElement('div');
-      row.className = 'template-item';
+function renderTemplates() {
+  templateList.innerHTML = '';
+  templates.forEach((text, index) => {
+    const row = document.createElement('div');
+    row.className = 'template-item';
 
-      const textBtn = document.createElement('button');
-      textBtn.className = 'template-text';
-      textBtn.textContent = text;
-      textBtn.onclick = () => editor.value = text;
+    const textBtn = document.createElement('button');
+    textBtn.className = 'template-text';
+    textBtn.textContent = text;
+    textBtn.onclick = () => editor.value = text;
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'delete';
-      delBtn.textContent = '×';
-      delBtn.onclick = () => {
-        templates.splice(index, 1);
-        localStorage.setItem('templates', JSON.stringify(templates));
-        renderTemplates();
-      };
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete';
+    delBtn.textContent = '×';
+    delBtn.onclick = () => {
+      templates.splice(index, 1);
+      localStorage.setItem('templates', JSON.stringify(templates));
+      renderTemplates();
+    };
 
-      row.appendChild(textBtn);
-      row.appendChild(delBtn);
-      templateList.appendChild(row);
-    });
-  }
+    row.appendChild(textBtn);
+    row.appendChild(delBtn);
+    templateList.appendChild(row);
+  });
+}
+renderTemplates();
+
+addTemplateBtn.onclick = () => {
+  if (!editor.value.trim()) return;
+  templates.unshift(editor.value.trim());
+  templates = templates.slice(0, 10);
+  localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
+  editor.value = '';
+};
 
-  addTemplateBtn.onclick = () => {
-    if (!editor.value.trim()) return;
-    templates.unshift(editor.value.trim());
-    templates = templates.slice(0, 10);
-    localStorage.setItem('templates', JSON.stringify(templates));
-    renderTemplates();
-    editor.value = ''; // auto-clear after saving
-  };
+boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
+capsBtn.onclick = () => { editor.classList.toggle('caps'); capsBtn.classList.toggle('active'); };
 
-  boldBtn.onclick = () => {
-    editor.classList.toggle('bold');
-    boldBtn.classList.toggle('active');
-  };
+copyBtn.onclick = async () => {
+  await navigator.clipboard.writeText(editor.value);
+  copyBtn.textContent = '✓ Copied';
+  setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
+};
 
-  capsBtn.onclick = () => {
-    editor.classList.toggle('caps');
-    capsBtn.classList.toggle('active');
-  };
+clearBtn.onclick = () => { editor.value = ''; };
 
-  copyBtn.onclick = async () => {
-    await navigator.clipboard.writeText(editor.value);
-    copyBtn.textContent = '✓ Copied';
-    setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
-  };
+async function takeScreenshot() {
+  toolbar.style.display = 'none';
 
-  clearBtn.onclick = () => {
-    editor.value = '';
-  };
+  const tempDiv = document.createElement('div');
+  tempDiv.style.width = editor.offsetWidth + 'px';
+  tempDiv.style.padding = '18px';
+  tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
+  tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
+  tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
+  tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
+  tempDiv.style.background = '#bbf7d0';
+  tempDiv.style.borderRadius = '14px';
+  tempDiv.style.position = 'relative';
+  tempDiv.textContent = editor.value;
 
-  async function takeScreenshot() {
-    toolbar.style.display = 'none';
-
-    const tempDiv = document.createElement('div');
-    tempDiv.style.width = editor.offsetWidth + 'px';
-    tempDiv.style.padding = '18px';
-    tempDiv.style.fontSize = window.getComputedStyle(editor).fontSize;
-    tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
-    tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
-    tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
-    tempDiv.style.background = '#bbf7d0';
-    tempDiv.style.borderRadius = '14px';
-    tempDiv.textContent = editor.value;
-
-    document.body.appendChild(tempDiv);
-
-    const canvas = await html2canvas(tempDiv, { backgroundColor: null });
-
-    if (watermarkToggle.checked) {
-      const ctx = canvas.getContext('2d');
-      const text = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
-      ctx.font = "10px sans-serif";
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
-      ctx.textAlign = "center";
-      ctx.fillText(text, canvas.width / 2, canvas.height - 6);
-    }
-
-    canvas.toBlob(async blob => {
-      const file = new File([blob], 'text.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
-      } else {
-        const link = document.createElement('a');
-        link.download = 'text.png';
-        link.href = URL.createObjectURL(file);
-        link.click();
-      }
-      toolbar.style.display = 'flex';
-      document.body.removeChild(tempDiv);
-    });
+  if(watermarkToggle.checked){
+    const wm = document.createElement('div');
+    wm.style.position = 'absolute';
+    wm.style.bottom = '6px';
+    wm.style.width = '100%';
+    wm.style.textAlign = 'center';
+    wm.style.fontSize = '10px';
+    wm.style.color = 'rgba(0,0,0,0.3)';
+    wm.textContent = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
+    tempDiv.appendChild(wm);
   }
 
-  shotBtn.onclick = takeScreenshot;
+  document.body.appendChild(tempDiv);
+  const canvas = await html2canvas(tempDiv, { backgroundColor: null });
 
-  let twoFinger = false;
-  document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
-  document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
+  canvas.toBlob(async blob => {
+    const file = new File([blob], 'text.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+    } else {
+      const link = document.createElement('a');
+      link.download = 'text.png';
+      link.href = URL.createObjectURL(file);
+      link.click();
+    }
+    toolbar.style.display = 'flex';
+    document.body.removeChild(tempDiv);
+  });
+}
+
+shotBtn.onclick = takeScreenshot;
+
+let twoFinger = false;
+document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
+document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
+
 </script>
-
 </body>
 </html>
