@@ -143,15 +143,6 @@
 
   .templates .add:active { transform: scale(0.97); }
 
-  #watermarkToggle {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    color: #ccc;
-    margin-top: 4px;
-    gap: 4px;
-  }
-
 </style>
 </head>
 <body>
@@ -164,11 +155,6 @@
   <button id="copyBtn">📋 Copy</button>
   <button id="clearBtn">🗑 Clear</button>
   <button id="shotBtn">📸</button>
-</div>
-
-<div id="watermarkToggle">
-  <input type="checkbox" id="toggleWatermark" checked>
-  <label for="toggleWatermark">Include watermark in screenshot</label>
 </div>
 
 <div class="templates">
@@ -185,7 +171,6 @@ const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const shotBtn = document.getElementById('shotBtn');
 const toolbar = document.getElementById('toolbar');
-const watermarkToggle = document.getElementById('toggleWatermark');
 
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
@@ -251,20 +236,7 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.position = 'relative';
   tempDiv.textContent = editor.value;
-
-  if(watermarkToggle.checked){
-    const wm = document.createElement('div');
-    wm.style.position = 'absolute';
-    wm.style.bottom = '6px';
-    wm.style.width = '100%';
-    wm.style.textAlign = 'center';
-    wm.style.fontSize = '10px';
-    wm.style.color = 'rgba(0,0,0,0.3)';
-    wm.textContent = "use free tool to capture screenshot like this - pprashil26.github.io/textbox";
-    tempDiv.appendChild(wm);
-  }
 
   document.body.appendChild(tempDiv);
   const canvas = await html2canvas(tempDiv, { backgroundColor: null });
