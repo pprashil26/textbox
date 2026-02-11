@@ -26,10 +26,10 @@ body {
   flex-direction: column;
   align-items: center;
 }
+
 #editor {
   width: 92%;
   max-width: 480px;
-  height: auto;
   min-height: 32vh;
   padding: 18px;
   font-size: 22px;
@@ -50,6 +50,16 @@ body {
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
 
+#charCount {
+  width: 92%;
+  max-width: 480px;
+  text-align: right;
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
 .toolbar {
   width: 92%;
   max-width: 480px;
@@ -69,25 +79,10 @@ body {
 }
 .toolbar button.active { background: #2563eb; }
 
-.templates-toggle {
-  width: 92%;
-  max-width: 480px;
-  display: flex;
-  justify-content: flex-end;
-  margin: 10px 0 4px;
-}
-.templates-toggle button {
-  border: none;
-  border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 12px;
-  background: #4a3838;
-  color: #fff;
-}
-
 .templates {
   width: 92%;
   max-width: 480px;
+  margin-top: 10px;
 }
 .templates h3 {
   font-size: 14px;
@@ -95,6 +90,25 @@ body {
   color: #ddd;
   margin-bottom: 6px;
 }
+
+.templates-header {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.templates-header button {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px;
+  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-weight: 600;
+}
+
 .template-item {
   display: flex;
   gap: 6px;
@@ -127,23 +141,13 @@ body {
   align-items: center;
   margin-top: 2px;
 }
-.pin.active { background: #5b4545; }
-.templates .add {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-weight: 600;
-  text-align: center;
-}
+.pin.active { background: #fff; color: #4a3838; }
 </style>
 </head>
 <body>
 
 <textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
+<div id="charCount">160</div>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -153,29 +157,37 @@ body {
   <button id="shotBtn">📸</button>
 </div>
 
-<div class="templates-toggle">
-  <button id="toggleTemplatesBtn">Hide Templates</button>
-</div>
-
 <div class="templates" id="templatesSection">
   <h3>Templates</h3>
-  <button class="add" id="addTemplateBtn">+ Save current text as template</button>
+  <div class="templates-header">
+    <button id="addTemplateBtn">+ Save current text as template</button>
+    <button id="toggleTemplatesBtn">Hide Templates</button>
+    <button id="backupTemplatesBtn">Backup</button>
+  </div>
   <div id="templateList"></div>
 </div>
 
 <script>
 const editor = document.getElementById('editor');
+const charCount = document.getElementById('charCount');
 const boldBtn = document.getElementById('boldBtn');
 const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
-const templateList = document.getElementById('templateList');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
+const backupTemplatesBtn = document.getElementById('backupTemplatesBtn');
+const templateList = document.getElementById('templateList');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
+
+function updateCharCount() {
+  charCount.textContent = 160 - editor.value.length;
+}
+editor.addEventListener('input', updateCharCount);
+updateCharCount();
 
 function renderTemplates() {
   templateList.innerHTML = '';
@@ -183,13 +195,16 @@ function renderTemplates() {
   const pinned = templates.filter(t => t.pinned);
   const unpinned = templates.filter(t => !t.pinned);
   const allTemplates = [...pinned, ...unpinned];
+
   allTemplates.forEach((t) => {
     const row = document.createElement('div');
     row.className = 'template-item';
+
     const textBtn = document.createElement('button');
     textBtn.className = 'template-text';
     textBtn.textContent = t.text;
     textBtn.onclick = () => editor.value = t.text;
+
     const pinBtn = document.createElement('button');
     pinBtn.className = 'pin';
     pinBtn.textContent = '📌';
@@ -199,6 +214,7 @@ function renderTemplates() {
       localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
+
     const delBtn = document.createElement('button');
     delBtn.className = 'delete';
     delBtn.textContent = '×';
@@ -207,12 +223,14 @@ function renderTemplates() {
       localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
+
     row.appendChild(textBtn);
     row.appendChild(pinBtn);
     row.appendChild(delBtn);
     templateList.appendChild(row);
   });
 }
+
 renderTemplates();
 
 toggleTemplatesBtn.onclick = () => {
@@ -228,6 +246,15 @@ addTemplateBtn.onclick = () => {
   localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
   editor.value = '';
+  updateCharCount();
+};
+
+backupTemplatesBtn.onclick = () => {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(templates));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", "templates.txt");
+  dlAnchor.click();
 };
 
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
@@ -239,7 +266,7 @@ copyBtn.onclick = async () => {
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
 
-clearBtn.onclick = () => { editor.value = ''; };
+clearBtn.onclick = () => { editor.value = ''; updateCharCount(); };
 
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
@@ -252,15 +279,15 @@ async function takeScreenshot() {
   tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
   tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
-  tempDiv.style.background = '#fbf3e0'; // subtle paper-like background
+  tempDiv.style.background = '#fbf3e0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.fontFamily = "'Patrick Hand', cursive"; // handwritten font
+  tempDiv.style.fontFamily = "'Patrick Hand', cursive";
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
   pre.style.font = 'inherit';
   pre.style.whiteSpace = 'pre-wrap';
-  pre.style.color = '#3b2f2f'; // dark brown text for handwritten feel
+  pre.style.color = '#3b2f2f';
   pre.textContent = editor.value;
   tempDiv.appendChild(pre);
 
