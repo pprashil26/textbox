@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Minimal Text</title>
 
 <link rel="manifest" href="manifest.json">
@@ -14,10 +13,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
 
 <style>
 * { box-sizing: border-box; }
-
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -27,10 +26,10 @@ body {
   flex-direction: column;
   align-items: center;
 }
-
 #editor {
   width: 92%;
   max-width: 480px;
+  height: auto;
   min-height: 32vh;
   padding: 18px;
   font-size: 22px;
@@ -44,24 +43,12 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   overflow: hidden;
 }
-
 #editor:focus {
   outline: 2px solid #22c55e;
   outline-offset: 2px;
 }
-
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
-
-#charCount {
-  font-size: 12px;
-  color: #ddd;
-  text-align: right;
-  width: 92%;
-  max-width: 480px;
-  margin-top: 2px;
-  margin-bottom: 4px;
-}
 
 .toolbar {
   width: 92%;
@@ -70,7 +57,6 @@ body {
   gap: 10px;
   margin: 10px 0 6px;
 }
-
 .toolbar button {
   flex: 1;
   padding: 8px 0;
@@ -81,78 +67,40 @@ body {
   background: #4a3838;
   color: #fff;
 }
-
 .toolbar button.active { background: #2563eb; }
+
+.templates-toggle {
+  width: 92%;
+  max-width: 480px;
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 4px;
+}
+.templates-toggle button {
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #4a3838;
+  color: #fff;
+}
 
 .templates {
   width: 92%;
   max-width: 480px;
 }
-
 .templates h3 {
   font-size: 14px;
   font-weight: 600;
   color: #ddd;
   margin-bottom: 6px;
 }
-
-/* BUTTON ROW UNDER HEADER */
-.template-actions {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.template-actions button {
-  flex: 1;
-  font-size: 13px;
-  padding: 8px 6px;
-  border: none;
-  border-radius: 10px;
-  background: #4a3838;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-/* Backup menu */
-.backup-menu {
-  position: relative;
-}
-
-.backup-options {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 36px;
-  background: #4a3838;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  z-index: 10;
-}
-
-.backup-options button {
-  display: block;
-  width: 100%;
-  padding: 6px 12px;
-  font-size: 13px;
-  border: none;
-  background: #4a3838;
-  color: #fff;
-  text-align: left;
-  cursor: pointer;
-}
-
-/* TEMPLATES */
 .template-item {
   display: flex;
   gap: 6px;
   margin-bottom: 8px;
   align-items: flex-start;
 }
-
 .template-text {
   flex: 1;
   padding: 10px;
@@ -164,7 +112,6 @@ body {
   text-align: left;
   white-space: pre-wrap;
 }
-
 .pin, .delete {
   width: 36px;
   height: 36px;
@@ -180,21 +127,23 @@ body {
   align-items: center;
   margin-top: 2px;
 }
-
-.pin.active {
-  background: #fff;
-  color: #4a3838;
-}
-
+.pin.active { background: #5b4545; }
 .templates .add {
-  display: none; /* handled in button row */
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #4a3838;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
 }
 </style>
 </head>
 <body>
 
 <textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
-<div id="charCount">160</div>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -204,25 +153,18 @@ body {
   <button id="shotBtn">📸</button>
 </div>
 
+<div class="templates-toggle">
+  <button id="toggleTemplatesBtn">Hide Templates</button>
+</div>
+
 <div class="templates" id="templatesSection">
   <h3>Templates</h3>
-  <div class="template-actions">
-    <button id="addTemplateBtn">+ Save current text as template</button>
-    <button id="toggleTemplatesBtn">Hide Templates</button>
-    <div class="backup-menu">
-      <button id="backupBtn">Backup</button>
-      <div class="backup-options" id="backupOptions">
-        <button id="exportBtn">Export Templates</button>
-        <button id="importBtn">Import Templates</button>
-      </div>
-    </div>
-  </div>
+  <button class="add" id="addTemplateBtn">+ Save current text as template</button>
   <div id="templateList"></div>
 </div>
 
 <script>
 const editor = document.getElementById('editor');
-const charCount = document.getElementById('charCount');
 const boldBtn = document.getElementById('boldBtn');
 const capsBtn = document.getElementById('capsBtn');
 const copyBtn = document.getElementById('copyBtn');
@@ -231,10 +173,6 @@ const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
-const backupBtn = document.getElementById('backupBtn');
-const backupOptions = document.getElementById('backupOptions');
-const exportBtn = document.getElementById('exportBtn');
-const importBtn = document.getElementById('importBtn');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
 let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 'true');
@@ -242,20 +180,16 @@ let templatesVisible = JSON.parse(localStorage.getItem('templatesVisible') ?? 't
 function renderTemplates() {
   templateList.innerHTML = '';
   if (!templatesVisible) return;
-
   const pinned = templates.filter(t => t.pinned);
   const unpinned = templates.filter(t => !t.pinned);
   const allTemplates = [...pinned, ...unpinned];
-
   allTemplates.forEach((t) => {
     const row = document.createElement('div');
     row.className = 'template-item';
-
     const textBtn = document.createElement('button');
     textBtn.className = 'template-text';
     textBtn.textContent = t.text;
     textBtn.onclick = () => editor.value = t.text;
-
     const pinBtn = document.createElement('button');
     pinBtn.className = 'pin';
     pinBtn.textContent = '📌';
@@ -265,7 +199,6 @@ function renderTemplates() {
       localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
-
     const delBtn = document.createElement('button');
     delBtn.className = 'delete';
     delBtn.textContent = '×';
@@ -274,14 +207,12 @@ function renderTemplates() {
       localStorage.setItem('templates', JSON.stringify(templates));
       renderTemplates();
     };
-
     row.appendChild(textBtn);
     row.appendChild(pinBtn);
     row.appendChild(delBtn);
     templateList.appendChild(row);
   });
 }
-
 renderTemplates();
 
 toggleTemplatesBtn.onclick = () => {
@@ -291,21 +222,12 @@ toggleTemplatesBtn.onclick = () => {
   renderTemplates();
 };
 
-// Backup menu toggle
-backupBtn.onclick = (e) => {
-  e.stopPropagation();
-  backupOptions.style.display = backupOptions.style.display === 'block' ? 'none' : 'block';
-};
-document.addEventListener('click', () => { backupOptions.style.display = 'none'; });
-backupOptions.addEventListener('click', e => e.stopPropagation());
-
 addTemplateBtn.onclick = () => {
   if (!editor.value.trim()) return;
   templates.unshift({ text: editor.value.trim(), pinned: false });
   localStorage.setItem('templates', JSON.stringify(templates));
   renderTemplates();
   editor.value = '';
-  charCount.textContent = 160;
 };
 
 boldBtn.onclick = () => { editor.classList.toggle('bold'); boldBtn.classList.toggle('active'); };
@@ -317,11 +239,7 @@ copyBtn.onclick = async () => {
   setTimeout(() => copyBtn.textContent = '📋 Copy', 800);
 };
 
-clearBtn.onclick = () => { editor.value = ''; charCount.textContent = 160; };
-
-editor.addEventListener('input', () => {
-  charCount.textContent = 160 - editor.value.length;
-});
+clearBtn.onclick = () => { editor.value = ''; };
 
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
@@ -334,14 +252,15 @@ async function takeScreenshot() {
   tempDiv.style.lineHeight = window.getComputedStyle(editor).lineHeight;
   tempDiv.style.fontWeight = editor.classList.contains('bold') ? 'bold' : 'normal';
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
-  tempDiv.style.background = '#bbf7d0';
+  tempDiv.style.background = '#fbf3e0'; // subtle paper-like background
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.color = '#3b2f2f';
+  tempDiv.style.fontFamily = "'Patrick Hand', cursive"; // handwritten font
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
   pre.style.font = 'inherit';
   pre.style.whiteSpace = 'pre-wrap';
+  pre.style.color = '#3b2f2f'; // dark brown text for handwritten feel
   pre.textContent = editor.value;
   tempDiv.appendChild(pre);
 
@@ -364,46 +283,11 @@ async function takeScreenshot() {
 }
 
 shotBtn.onclick = takeScreenshot;
+
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
 
-// Export / Import
-exportBtn.onclick = () => {
-  const dataStr = JSON.stringify(templates, null, 2);
-  const blob = new Blob([dataStr], {type: "application/json"});
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = "templates.json";
-  link.click();
-};
-
-importBtn.onclick = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json, .txt';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const imported = JSON.parse(ev.target.result);
-        if (Array.isArray(imported)) {
-          templates = imported;
-          localStorage.setItem('templates', JSON.stringify(templates));
-          renderTemplates();
-        } else {
-          alert("Invalid file format");
-        }
-      } catch(err) {
-        alert("Error reading file");
-      }
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-};
 </script>
-
 </body>
 </html>
