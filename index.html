@@ -53,12 +53,22 @@ body {
 #editor.bold { font-weight: bold; }
 #editor.caps { text-transform: uppercase; }
 
+#charCountdown {
+  width: 92%;
+  max-width: 480px;
+  text-align: right;
+  font-size: 12px;
+  color: #ddd;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
 .toolbar {
   width: 92%;
   max-width: 480px;
   display: flex;
   gap: 10px;
-  margin: 10px 0 6px;
+  margin: 6px 0 10px;
 }
 
 .toolbar button {
@@ -74,34 +84,50 @@ body {
 
 .toolbar button.active { background: #2563eb; }
 
-.templates-controls {
+.templates-section {
   width: 92%;
   max-width: 480px;
+}
+
+.templates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0 4px;
+}
+
+.templates-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ddd;
+  margin: 0;
+}
+
+.templates-header button {
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #4a3838;
+  color: #fff;
+  cursor: pointer;
+}
+
+.templates-controls {
   display: flex;
   gap: 6px;
-  margin: 10px 0 4px;
+  margin-bottom: 8px;
 }
 
 .templates-controls button {
   flex: 1;
-  border: none;
-  border-radius: 10px;
-  padding: 6px 8px;
-  font-size: 12px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
   background: #4a3838;
   color: #fff;
-}
-
-.templates {
-  width: 92%;
-  max-width: 480px;
-}
-
-.templates h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ddd;
-  margin-bottom: 6px;
+  border-radius: 10px;
+  border: none;
 }
 
 .template-item {
@@ -159,6 +185,7 @@ body {
 <body>
 
 <textarea id="editor" maxlength="160" placeholder="Type short message (max 160 chars)…"></textarea>
+<div id="charCountdown">0 / 160</div>
 
 <div class="toolbar" id="toolbar">
   <button id="boldBtn">B</button>
@@ -168,24 +195,19 @@ body {
   <button id="shotBtn">📸</button>
 </div>
 
-<div class="templates-controls">
-  <button id="addTemplateBtn">+ Save current text as template</button>
-  <button id="toggleTemplatesBtn">Hide Templates</button>
-  <button id="backupBtn">Backup</button>
-</div>
-
-<div id="backupMenu" style="display:none; width: 100%;">
-  <button id="exportTemplatesBtn" style="width:100%; margin-bottom:4px;">Export Templates</button>
-  <button id="importTemplatesBtn" style="width:100%;">Import Templates</button>
-  <input type="file" id="importFileInput" accept=".txt" style="display:none;">
-</div>
-
-<div class="templates" id="templatesSection">
-  <h3>Templates</h3>
+<div class="templates-section">
+  <div class="templates-header">
+    <h3>Templates</h3>
+    <button id="toggleTemplatesBtn">Hide Templates</button>
+  </div>
+  <div class="templates-controls">
+    <button class="add" id="addTemplateBtn">+ Save current text as template</button>
+    <button id="backupBtn">Backup</button>
+    <button id="exportBtn">Export Templates</button>
+    <button id="importBtn">Import Templates</button>
+  </div>
   <div id="templateList"></div>
 </div>
-
-<div id="charCountdown" style="width:92%; max-width:480px; text-align:right; font-size:12px; color:#ddd; margin-top:2px;">0 / 160</div>
 
 <script>
 const editor = document.getElementById('editor');
@@ -197,11 +219,9 @@ const shotBtn = document.getElementById('shotBtn');
 const addTemplateBtn = document.getElementById('addTemplateBtn');
 const templateList = document.getElementById('templateList');
 const toggleTemplatesBtn = document.getElementById('toggleTemplatesBtn');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
 const backupBtn = document.getElementById('backupBtn');
-const backupMenu = document.getElementById('backupMenu');
-const exportTemplatesBtn = document.getElementById('exportTemplatesBtn');
-const importTemplatesBtn = document.getElementById('importTemplatesBtn');
-const importFileInput = document.getElementById('importFileInput');
 const charCountdown = document.getElementById('charCountdown');
 
 let templates = JSON.parse(localStorage.getItem('templates') || '[]');
@@ -249,7 +269,6 @@ function renderTemplates() {
     templateList.appendChild(row);
   });
 }
-
 renderTemplates();
 
 toggleTemplatesBtn.onclick = () => {
@@ -285,36 +304,35 @@ function updateCharCountdown() {
 editor.addEventListener('input', updateCharCountdown);
 updateCharCountdown();
 
-backupBtn.onclick = () => { backupMenu.style.display = backupMenu.style.display==='none'?'block':'none'; };
-
-exportTemplatesBtn.onclick = () => {
-  const content = templates.map(t=>t.text).join('\n\n');
-  const blob = new Blob([content], {type:'text/plain'});
+// Backup / Export / Import
+backupBtn.onclick = () => { alert('Backup placeholder'); };
+exportBtn.onclick = () => {
+  const blob = new Blob([JSON.stringify(templates)], { type: 'text/plain;charset=utf-8' });
   const link = document.createElement('a');
   link.download = 'templates.txt';
   link.href = URL.createObjectURL(blob);
   link.click();
-  backupMenu.style.display = 'none';
 };
-
-importTemplatesBtn.onclick = () => importFileInput.click();
-importFileInput.onchange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const lines = reader.result.split('\n\n');
-    lines.forEach(line => {
-      if(line.trim()) templates.push({text: line.trim(), pinned:false});
-    });
-    localStorage.setItem('templates', JSON.stringify(templates));
-    renderTemplates();
-    backupMenu.style.display = 'none';
+importBtn.onclick = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.txt';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        templates = JSON.parse(ev.target.result);
+        localStorage.setItem('templates', JSON.stringify(templates));
+        renderTemplates();
+      } catch(err) { alert('Invalid file'); }
+    };
+    reader.readAsText(file);
   };
-  reader.readAsText(file);
-  importFileInput.value = '';
+  input.click();
 };
 
+// Screenshot feature with Patrick Hand font
 async function takeScreenshot() {
   const toolbar = document.getElementById('toolbar');
   toolbar.style.display = 'none';
@@ -328,7 +346,8 @@ async function takeScreenshot() {
   tempDiv.style.textTransform = editor.classList.contains('caps') ? 'uppercase' : 'none';
   tempDiv.style.background = '#bbf7d0';
   tempDiv.style.borderRadius = '14px';
-  tempDiv.style.color = '#3b2f2f'; // Dark brown text
+  tempDiv.style.fontFamily = '"Patrick Hand", cursive';
+  tempDiv.style.color = '#3b2f2f';
 
   const pre = document.createElement('pre');
   pre.style.margin = '0';
@@ -356,7 +375,6 @@ async function takeScreenshot() {
 }
 
 shotBtn.onclick = takeScreenshot;
-
 let twoFinger = false;
 document.addEventListener('touchstart', e => { if(e.touches.length===2) twoFinger=true; });
 document.addEventListener('touchend', () => { if(twoFinger){takeScreenshot();twoFinger=false;} });
