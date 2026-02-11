@@ -1,30 +1,30 @@
 # Minimal Text
 
-A lightweight, mobile-friendly text tool for short messages.
+A simple, mobile-friendly text tool for short messages with basic formatting.
 
 ## Features
 
-- Type short messages (max 160 chars)  
-- Bold & UPPERCASE toggles  
-- Copy text to clipboard  
-- Clear text quickly  
-- Save templates for reuse with delete option  
-- Screenshot text exactly as typed (line breaks preserved)  
-- Compact toolbar at bottom, minimalist UI  
-- Soft mint green textbox with subtle shadow and focus ring  
-- Offline & privacy-focused, no syncing  
+- **Bold & CAPS** text toggle.
+- **Copy** or **Clear** text.
+- **Screenshot** text as image (text color preserved, dark brown).
+- **Templates**: save, pin, delete, hide/show.
+- **Auto-grow** textarea for effortless typing.
+- Minimalist UI with dark brown background and soft mint text box.
 
-## How to Use
+## Usage
 
-1. Type your message in the textbox.  
-2. Use toolbar buttons to style, copy, clear, or take screenshot.  
-3. Save messages as templates for quick reuse.  
-4. Tap a template to load it into the textbox.  
-5. Delete templates using the red × button.  
+1. Type your message in the text box (max 160 chars).
+2. Use toolbar to toggle **Bold**, **CAPS**, **Copy**, **Clear**, or take a **Screenshot**.
+3. Save frequently used messages as **Templates** for quick reuse.
+4. Pin important templates or hide templates as needed.
 
 ## PWA Support
 
-- Add to Home Screen for app-like experience.  
-- Works fully offline.  
+- Can be installed on mobile as a Progressive Web App.
+- Offline usage fully supported.
+- Works on iOS and Android.
 
-**GitHub Pages URL:** `https://pprashil26.github.io/textbox`
+## Privacy
+
+- All data is stored locally in your browser.
+- No syncing or sharing of content.
